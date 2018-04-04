@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import processing.core.*;
+import processing.opengl.PGraphics3D;
 import processing.opengl.PShader;
 
 
@@ -16,23 +17,30 @@ public class timeline extends PApplet{
 
 	static List<wordObject> words;
 	static List<knotObject> knots;
-	static int[] colors;
+	static List<Integer> colors;
 	static List<Integer> wordCount;
-	float lastposX = 0;
-	float zPos = 400;
+	
+
 	PVector lookat = new PVector(0,0,400);
 	PVector lastObjectPosition = new PVector(0,0,0);
+	
 	PFont menufont;
+	
 	static PShape wordCloud; 
 	static PShape connections;
 	static PShape circle;
 	static PShape allCircles;
+	
 	static PImage timeline;
 	static PShader corner;
-	boolean useshader = false;
 	static PGraphics mainOutput;
-	int currentsentence = 0;
+	
+	boolean useshader = false;
 	boolean showall = false;
+	boolean showtext = true;
+	
+	float lastposX = 0;
+	float zPos = 400;	
 	float aspect;
 	float maxY = 0;
 	float minY = 50000;
@@ -42,14 +50,13 @@ public class timeline extends PApplet{
 	Random r = new Random();
 	
 	public void settings(){
-        size(1900, 800, P3D);
-       
+        fullScreen(P3D, SPAN);
         widthBG = width;
         newwidthBG = widthBG;
         words = new ArrayList<wordObject>();
         knots = new ArrayList<knotObject>();
-        aspect = (width/height);
-        colors = new int[WordCloudTimeline.words.size()];
+        aspect = (3840/1080);
+        colors = new ArrayList<Integer>();
         wordCount = new ArrayList<Integer>();
        
         for(int k = 0; k < WordCloudTimeline.words.size(); k++) {
@@ -58,8 +65,8 @@ public class timeline extends PApplet{
     }
 	
 	public void setup(){
-		mainOutput = createGraphics(1900, 800, P3D);
-		menufont = createFont("Avenir LT 45 Book", 148,true);
+		mainOutput = createGraphics(3840, 1080, P3D);
+		menufont = createFont("Avenir LT 45 Book", 48,true);
 		wordCloud = createShape();
 		connections = createShape(GROUP);
 		circle = createShape(ELLIPSE,0,0,10,10);
@@ -68,9 +75,11 @@ public class timeline extends PApplet{
 		corner = loadShader("./resources/shader/corner.glsl");
 		
 		//create random colors
+		/*
 		for(int j = 0; j < WordCloudTimeline.words.size(); j++) {
 			colors[j] = color(random(255),random(255),random(255));
 		}
+		*/
 		
 		//create auto Badges		
 		int i = 0;
@@ -90,7 +99,7 @@ public class timeline extends PApplet{
      	mainOutput.textMode(SHAPE);
      	mainOutput.textFont(menufont);
     	
-    	//create timeline
+    	//draw timeline
      	mainOutput.noStroke();
     	if(words.size() > 0) {
     		newwidthBG = (widthBG < words.get(words.size()-1).pos.x) ? words.get(words.size()-1).pos.x : widthBG  ;
@@ -125,8 +134,10 @@ public class timeline extends PApplet{
 		//draw connections and objects
 		mainOutput.stroke(223,255,23,255);
 		mainOutput.shape(connections);
+		mainOutput.shape(allCircles);
 		mainOutput.shape(wordCloud);
     	
+		/*
     	//draw knots
     	for(knotObject k : knots) {
     		if(k.childs.size() > 1) {
@@ -139,18 +150,29 @@ public class timeline extends PApplet{
 	    		mainOutput.scale(sc,sc,sc);
 	    		mainOutput.shape(circle);
 	    		mainOutput.popMatrix();
+	    		 if(in_frustum(k.position) == true && showtext == true) {
+	    			 mainOutput.pushMatrix();
+	    			 mainOutput.translate(k.position.x,k.position.y,0);
+	    			 mainOutput.fill(255);
+	    			 mainOutput.textSize(60 + 20 * k.childs.size());
+	    			 mainOutput.text(k.word,0,0); 
+	    			 mainOutput.popMatrix();
+	    		 }
+
     		}
     	}
+    	*/
     	
     	float scl = 1f;
     	
     	//init FX
     	for(wordObject w : words){
 			if(w.init > 0.) {
-				mainOutput.pushMatrix();
+				mainOutput.pushMatrix();			
 				mainOutput.translate(w.pos.x,w.pos.y,0);
+				float scaleF = (float)1.+ 4f*(1.f - w.init);
+				mainOutput.scale(scaleF);
 				mainOutput.fill(255,255*(w.init));
-				mainOutput.textSize((scl / 1.777f) + 120f*(1.f - w.init));
 				mainOutput.textAlign(CENTER, CENTER);
 				mainOutput.text(w.word,0,0);
 				mainOutput.popMatrix();
@@ -158,18 +180,21 @@ public class timeline extends PApplet{
 			}
     	}
 		
-    	/*
-    	//draw text
+    	
+    	//draw text on visible object
 		for(wordObject w : words){
-		  pushMatrix();	
-		  textSize(w.tweight);
-		  textAlign(CENTER,CENTER);
-		  fill(255);
-		  translate(5,0,0);
-		  text(w.word, w.pos.x, w.pos.y,(float)0.);
-		  popMatrix();
+		  if(in_frustum(w.pos) == true && showall == false && lookat.z < 401) {	
+			  mainOutput.pushMatrix();	
+			  mainOutput.textSize(18);
+			  mainOutput.textAlign(CENTER,CENTER);
+			  float col = 1 - (0.1f * (lookat.z - 400));
+			  mainOutput.fill(255*col);
+			  mainOutput.translate(w.pos.x, w.pos.y,0);
+			  mainOutput.text(w.word, 0,0);
+			  mainOutput.popMatrix();
+		  }
 		 }
-		*/
+		
     	mainOutput.endDraw();
     	
     	if(useshader == true) {
@@ -179,41 +204,59 @@ public class timeline extends PApplet{
 	    	shader(corner);
     	}
     	
-    	image(mainOutput,0,0);
+    	image(mainOutput,0,0,1920,540);
+    	image(mainOutput,1920,0);
 		
     	if(useshader == true) {
     		resetShader();
-    		
     	}
     	
-    	surface.setTitle("fps: "+ frameRate + "//" + "wordcount = " + words.size());
+    	textSize(13);
+    	text("fps: " + frameRate,1780,1060);
+    	
+    	//surface.setTitle("fps: "+ frameRate + "//" + "wordcount = " + words.size());
     
     }
     
     
     public void createBadge(float amt) {
+    	//zoom near
     	zPos = 400;
 		showall = false;
 		
 		int pick = (int) ((int) r.nextInt(WordCloudTimeline.words.size()) * amt);
+		String text = WordCloudTimeline.words.get(pick);
 		
 		//check if word was already used
 		boolean newWord = false;
-		if(wordCount.get(pick) == 0) {
+		int knotid = 0;
+		
+		Optional<knotObject> currentKnot = knots.stream()
+	        .filter(knotObject -> knotObject.word.equalsIgnoreCase(text))
+	        .findFirst();
+		
+		// new word = new knot
+		if(currentKnot.isPresent() == false) {
 			newWord = true;
+			int color = color((int)(50 +  frameCount*0.1 % 205));
+			colors.add(color);
+			knotid = knots.size();
 		}
-		wordCount.set(pick, wordCount.get(pick) + 1);
+		
+		// used word = no new knot
+		else if(currentKnot.isPresent() == true) {
+			knotid = currentKnot.get().id;
+		}
 		
 		
-		//generate WordObject at position
-		String text = WordCloudTimeline.words.get(pick);
+		//generate WordObject position
 		float deltaX = random((float)50.,(float)190.);
 		float deltaY = random((float)-400.,(float)400.);
 		minY = (deltaY <= minY) ? deltaY : minY;
 		maxY = (deltaY >= maxY) ? deltaY : maxY;
 		PVector pos = new PVector(lastposX + deltaX,(float)deltaY,(float)0.);
-		float weigth = random(30,40);
-		wordObject new1 = new wordObject(text,pos,weigth,pick,this);
+
+		wordObject new1 = new wordObject(text,pos,knotid,this);
 		words.add(new1);
 		lastposX += deltaX;
 		
@@ -223,24 +266,21 @@ public class timeline extends PApplet{
 			float posy = random((float)-1600.,(float)-1000.) * dir[(int)random(2)];
 			minY = (posy <= minY) ? posy : minY;
 			maxY = (posy >= maxY) ? posy : maxY;
-			knots.add(new knotObject(lastposX,posy,pick,this));
+			knots.add(new knotObject(lastposX,posy,knots.size(),text,this));
 		}
 		else if(newWord == false) {
-			Optional<knotObject> currentKnot = knots.stream()
-		            .filter(knotObject -> knotObject.id == pick)
-		            .findFirst();
-			
-			if(currentKnot.isPresent()) {
 					currentKnot.get().changeposition(lastposX);
-			}
-		}	
+		}
+		
+	
     }
     
     void createTimelineTexture() {
-    	  timeline = createImage(1,800,RGB);
+    	  int heightTimelineTexture = 800;
+    	  timeline = createImage(1,heightTimelineTexture,RGB);
     	  timeline.loadPixels();
     	  for (int i = 0; i < timeline.pixels.length; i++) {
-    		  float delta = 1f - (0.5f * (cos(((float)i/(float)800)*TWO_PI) + 1f));
+    		  float delta = 1f - (0.5f * (cos(((float)i/(float)heightTimelineTexture)*TWO_PI) + 1f));
     		  timeline.pixels[i] = color(delta * 120f); 
     	  }
     	  timeline.updatePixels();
@@ -248,20 +288,9 @@ public class timeline extends PApplet{
     }
     
     public void keyPressed(){
-    	//add new object
-    	if (key == '1' && words.size() > 0) {
-    		float deltaX = random((float)50.,(float)190.);
-    		float deltaY = random((float)0.,height);
-    		PVector pos = new PVector(lastposX + deltaX,(float)deltaY,(float)0.);
-    		float weigth = random(30,40);
-    		String text = WordCloudTimeline.taggedText.get(words.size());
-    		wordObject new1 = new wordObject(text,pos,weigth,words.size(),this);
-    		words.add(new1);
-    		lastposX += deltaX;
-    		
-    	}
+    
     	
-    	else if(key == 'w') {
+    	if(key == 'w') {
     		//show all
     		if(words.size() > 1) {
     			showall = true;
@@ -281,11 +310,11 @@ public class timeline extends PApplet{
 	    		
 	    		
 	    		if(lenav >= lenah * aspect) {    		
-	    			zPos = (lenav *sin(degCv) / sin(degAv)) * (float)-1.0;
+	    			zPos = abs((lenav *sin(degCv) / sin(degAv)) * (float)-1.0);
 	    			
 	    		}
 	    		else {
-	    			zPos = aspect * (lenah *sin(degCh) / sin(degAh));
+	    			zPos = abs(aspect * (lenah *sin(degCh) / sin(degAh)));
 	    			
 	    		}
 	    		
@@ -302,11 +331,22 @@ public class timeline extends PApplet{
     	}   
     	else if(key == 's') {
     		useshader = !useshader;
-    	}      	
-    	else if(key == 'k') {
-    		WordCloudTimeline.pipe.doSentenceTest(WordCloudTimeline.input);
     	}
+    	else if(key == 't') {
+    		showtext = !showtext;
+    	}
+    	
 
     }
 	
+    private boolean in_frustum(PVector pos) {
+        PMatrix3D MVP = ((PGraphics3D)mainOutput).projmodelview;
+        float[] where = {pos.x,pos.y,pos.z-100,1.f};
+        float[] Pclip = new float[4];
+        MVP.mult(where, Pclip);
+        return abs(Pclip[0]) < Pclip[3] && 
+               abs(Pclip[1]) < Pclip[3] && 
+               0 < Pclip[2] && 
+               Pclip[2] < Pclip[3];
+    }
 }
