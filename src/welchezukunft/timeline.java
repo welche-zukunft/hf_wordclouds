@@ -11,7 +11,7 @@ import java.util.Random;
 import processing.core.*;
 import processing.opengl.PGraphics3D;
 import processing.opengl.PShader;
-
+import static java.lang.Math.toIntExact;
 
 public class timeline extends PApplet{
 
@@ -20,6 +20,7 @@ public class timeline extends PApplet{
 	static List<Integer> colors;
 	static List<Integer> wordCount;
 	
+	static List<colorGrad> gradients;
 
 	PVector lookat = new PVector(0,0,400);
 	PVector lastObjectPosition = new PVector(0,0,0);
@@ -47,15 +48,26 @@ public class timeline extends PApplet{
 	float fovy = PI/3;
 	float widthBG, newwidthBG;
 	
+	long millis;
+	long millisrun;
+	//9 minutes per talk
+	int speaktime = 1;
+	long totaltime = 1000 * 60 * speaktime;
+	//time float between 0. - 1.
+	float tposition;
+	
 	Random r = new Random();
 	
 	public void settings(){
         fullScreen(P3D, SPAN);
+        smooth(8);
+        
         widthBG = width;
         newwidthBG = widthBG;
+        aspect = (3840/1080);
+        
         words = new ArrayList<wordObject>();
         knots = new ArrayList<knotObject>();
-        aspect = (3840/1080);
         colors = new ArrayList<Integer>();
         wordCount = new ArrayList<Integer>();
        
@@ -65,29 +77,24 @@ public class timeline extends PApplet{
     }
 	
 	public void setup(){
+		
+		frameRate(60);
+		
 		mainOutput = createGraphics(3840, 1080, P3D);
-		menufont = createFont("Avenir LT 45 Book", 48,true);
+		
+		menufont = createFont("Avenir LT 45 Book", 148,true);
+		
+		allCircles = createShape(GROUP);
 		wordCloud = createShape();
 		connections = createShape(GROUP);
 		circle = createShape(ELLIPSE,0,0,10,10);
 		circle.disableStyle();
-		allCircles = createShape(GROUP);
+
 		corner = loadShader("./resources/shader/corner.glsl");
 		
-		//create random colors
-		/*
-		for(int j = 0; j < WordCloudTimeline.words.size(); j++) {
-			colors[j] = color(random(255),random(255),random(255));
-		}
-		*/
-		
-		//create auto Badges		
-		int i = 0;
-		while(i>0) {
-			createBadge(1f);
-			i--;
-		}
 		createTimelineTexture();
+		
+		loadGradients();
 	}
 
     public void draw(){
@@ -96,7 +103,6 @@ public class timeline extends PApplet{
      	mainOutput.clear();
      	mainOutput.background(0);
      	mainOutput.hint(DISABLE_DEPTH_TEST); 
-     	mainOutput.textMode(SHAPE);
      	mainOutput.textFont(menufont);
     	
     	//draw timeline
@@ -137,20 +143,13 @@ public class timeline extends PApplet{
 		mainOutput.shape(allCircles);
 		mainOutput.shape(wordCloud);
     	
-		/*
-    	//draw knots
+		
+    	//draw text over knots
     	for(knotObject k : knots) {
     		if(k.childs.size() > 1) {
-    			mainOutput.pushMatrix();
-    			mainOutput.translate(k.position.x,k.position.y,0);
-    			mainOutput.noStroke();
-    			mainOutput.fill(colors[k.id]);
-	    		int count = wordCount.get(k.id);
-	    		float sc = 3.f+count*10;
-	    		mainOutput.scale(sc,sc,sc);
-	    		mainOutput.shape(circle);
-	    		mainOutput.popMatrix();
-	    		 if(in_frustum(k.position) == true && showtext == true) {
+    			 if(in_frustum(k.position) == true && showtext == true) {
+    				 
+    				 
 	    			 mainOutput.pushMatrix();
 	    			 mainOutput.translate(k.position.x,k.position.y,0);
 	    			 mainOutput.fill(255);
@@ -161,7 +160,7 @@ public class timeline extends PApplet{
 
     		}
     	}
-    	*/
+    	
     	
     	float scl = 1f;
     	
@@ -212,8 +211,10 @@ public class timeline extends PApplet{
     	}
     	
     	textSize(13);
-    	text("fps: " + frameRate,1780,1060);
-    	
+    	text("fps: " + frameRate,1720,1020);
+    	text("floatposition: " + tposition,1720,1040);
+    	millisrun = System.currentTimeMillis() - millis;
+    	text("runningtime: " + millisrun,1720,1060);
     	//surface.setTitle("fps: "+ frameRate + "//" + "wordcount = " + words.size());
     
     }
@@ -238,7 +239,14 @@ public class timeline extends PApplet{
 		// new word = new knot
 		if(currentKnot.isPresent() == false) {
 			newWord = true;
-			int color = color((int)(50 +  frameCount*0.1 % 205));
+			
+			//time in seconds
+			float seconds = 100f* ((float)toIntExact(millisrun) / (float)toIntExact(totaltime));
+			System.out.println(seconds + " / "  + millisrun + " / " + totaltime);
+			tposition = (float)seconds/(float)(speaktime*60); 
+
+			int color = gradients.get(0).getColor(tposition);
+
 			colors.add(color);
 			knotid = knots.size();
 		}
@@ -335,7 +343,9 @@ public class timeline extends PApplet{
     	else if(key == 't') {
     		showtext = !showtext;
     	}
-    	
+    	else if(key == 'c') {
+    		millis = System.currentTimeMillis();
+    	}
 
     }
 	
@@ -348,5 +358,11 @@ public class timeline extends PApplet{
                abs(Pclip[1]) < Pclip[3] && 
                0 < Pclip[2] && 
                Pclip[2] < Pclip[3];
+    }
+    
+    private void loadGradients() {
+    	gradients = new ArrayList<colorGrad>();
+    	colorGrad c1 = new colorGrad(230,97,107,44,44,112,this);
+    	gradients.add(c1);
     }
 }

@@ -1,16 +1,13 @@
 package welchezukunft;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.Comparator;
 
 import org.gicentre.utils.move.Ease;
 
-import jogamp.opengl.glu.nurbs.Knotspec;
 import processing.core.*;
 
 public class knotObject {
@@ -27,8 +24,7 @@ public class knotObject {
 		this.word = word;
 		this.parent = parent;
 		childs = new ArrayList<Integer>();
-
-		//connect adds also child objects
+		//connect adds also child objects -> connect first than (re)place circle
 		connect();
 		placeCircle();
 	}
@@ -48,7 +44,6 @@ public class knotObject {
 	private void placeCircle() {
 		//if only one child circle not visible
 		if(this.childs.size() < 2) {
-			System.out.println("init circle " + this.id);
 			PShape circle = this.parent.createShape();
 			float radius = 0;
 			circle.beginShape(PConstants.TRIANGLE_FAN);
@@ -56,19 +51,18 @@ public class knotObject {
 			circle.noStroke();
 			circle.vertex(this.position.x, this.position.y);
 			for (int i = 0; i <= 10; i++)   {
-				circle.vertex(this.position.x + (radius * parent.cos(i * parent.TWO_PI / 20f)), (this.position.y + (radius * parent.sin(i * parent.TWO_PI / 20f))));	
+				circle.vertex(this.position.x + (radius * parent.cos(i * parent.TWO_PI / 10f)), (this.position.y + (radius * parent.sin(i * parent.TWO_PI / 10f))));	
 			}	
 			circle.endShape();
 			timeline.allCircles.addChild(circle);
 		}
 		//if more than one childs visible circle and draw at actual position
-		else if(this.childs.size() >= 2) {
-			System.out.println("move circle " + this.id);
+		else if(this.childs.size() >= 2) {	
 			PShape circle = timeline.allCircles.getChild(this.id);
 			float radius = 100.f+this.childs.size()*10;
 			circle.setVertex(0,position);
 			for (int j = 1; j <= 11; j++)   {
-				PVector v1 = new PVector(this.position.x + (radius * parent.cos(j * parent.TWO_PI / 20f)), (this.position.y + (radius * parent.sin(j * parent.TWO_PI / 20f))));
+				PVector v1 = new PVector(this.position.x + (radius * parent.cos(j * parent.TWO_PI / 10f)), (this.position.y + (radius * parent.sin(j * parent.TWO_PI / 10f))));
 				circle.setVertex(j, v1);
 			}
 		}
@@ -79,16 +73,12 @@ public class knotObject {
 		int coly = timeline.colors.get(this.id);
 		//get count of appearances 
 		int count = (int) timeline.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
-		System.out.println("count: " + count + " (" + this.word +")");
+		
 		// get objects with same id
 		Stream<wordObject> testStream = timeline.words.stream().filter(wordObject -> wordObject.id == this.id);
 		List<wordObject> testList = testStream.collect(Collectors.toList());
 		
-		/*
-		System.out.println("---Sorting using Comparator by Age with reverse order---");
-		slist = list.stream().sorted(Comparator.comparing(Student::getAge).reversed()).collect(Collectors.toList());
-		slist.forEach(e -> System.out.println("Id:"+ e.getId()+", Name: "+e.getName()+", Age:"+e.getAge()));
-		*/
+		// calculate maxCount
 		int maxCount = 0;
 		if(timeline.knots.size() > 0) {
 			maxCount = timeline.knots.stream()
@@ -97,15 +87,15 @@ public class knotObject {
 					.collect(Collectors.toList()).get(0).childs.size();
 		}
 		
-		//int maxCount = Collections.max(timeline.wordCount);
+
 		//calculate alpha
-		float div= (float)this.childs.size()/ (float)maxCount;
+		float div = (float)this.childs.size() / (float)maxCount;
 		float alp = 60f + parent.map(parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
 
+		//create or shift connections
 		for(wordObject w : testList) {
 				int idFilter = testList.indexOf(w);
 				if(idFilter == testList.size()-1) {
-					float deltax = this.position.x - w.pos.x;
 					float deltay = this.position.y - w.pos.y;
 					PShape connection = this.parent.createShape();
 					connection.beginShape();
@@ -128,7 +118,6 @@ public class knotObject {
 				}
 				
 				else {
-					System.out.println(this.childs.size() + " / " + idFilter);
 					PShape curve = timeline.connections.getChild(this.childs.get(idFilter));
 					//TODO change alpha value
 					int col = parent.color(parent.red(coly),parent.green(coly),parent.blue(coly),alp);
@@ -137,7 +126,6 @@ public class knotObject {
 					PVector v2 = curve.getVertex(1);
 					PVector v3 = curve.getVertex(2);
 					PVector v4 = curve.getVertex(3);
-					float deltax = this.position.x - w.pos.x;
 					float deltay = this.position.y - w.pos.y;
 					v1 = new PVector(this.position.x,this.position.y,0);
 					v2 = new PVector(this.position.x, this.position.y - (deltay/1f));
