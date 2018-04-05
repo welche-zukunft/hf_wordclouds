@@ -74,6 +74,8 @@ public class timeline extends PApplet{
         for(int k = 0; k < WordCloudTimeline.words.size(); k++) {
         	wordCount.add(0);
         }
+        
+        millis = System.currentTimeMillis();
     }
 	
 	public void setup(){
@@ -242,7 +244,6 @@ public class timeline extends PApplet{
 			
 			//time in seconds
 			float seconds = 100f* ((float)toIntExact(millisrun) / (float)toIntExact(totaltime));
-			System.out.println(seconds + " / "  + millisrun + " / " + totaltime);
 			tposition = (float)seconds/(float)(speaktime*60); 
 
 			int color = gradients.get(0).getColor(tposition);
@@ -260,10 +261,9 @@ public class timeline extends PApplet{
 		//generate WordObject position
 		float deltaX = random((float)50.,(float)190.);
 		float deltaY = random((float)-400.,(float)400.);
+		PVector pos = new PVector(lastposX + deltaX,(float)deltaY,(float)0.);
 		minY = (deltaY <= minY) ? deltaY : minY;
 		maxY = (deltaY >= maxY) ? deltaY : maxY;
-		PVector pos = new PVector(lastposX + deltaX,(float)deltaY,(float)0.);
-
 		wordObject new1 = new wordObject(text,pos,knotid,this);
 		words.add(new1);
 		lastposX += deltaX;
@@ -277,7 +277,10 @@ public class timeline extends PApplet{
 			knots.add(new knotObject(lastposX,posy,knots.size(),text,this));
 		}
 		else if(newWord == false) {
-					currentKnot.get().changeposition(lastposX);
+			currentKnot.get().changeposition(lastposX);
+			float newposy = currentKnot.get().position.y;
+			minY = (newposy <= minY) ? newposy : minY;
+			maxY = (newposy >= maxY) ? newposy : maxY;
 		}
 		
 	
@@ -304,29 +307,18 @@ public class timeline extends PApplet{
     			showall = true;
     			float xStart = words.get(0).pos.x;
     			float xEnd = words.get(words.size()-1).pos.x;
-    			float yStart = minY;
-    			float yEnd = maxY;		
+    			float yStart = abs(minY);
+    			float yEnd = maxY;	
+
+    			float radAngle = radians(fovy);
+    			float radHFOV = 2 * atan(tan(radAngle / 2) * aspect);
+    			float fovx = degrees(radHFOV);
+ 			
+    			float distancex = 1/(2f * tan((fovx/2)/(xEnd-xStart)));
+    			float distancey = 1/(2f * tan((fovy/2)/(maxY*1.05f-minY*1.05f)));
+    			zPos = Math.max(distancex, distancey);
     			
-	    		float degAh = (float)0.5 * degrees((float) (PI/3.0));
-	    		float degAv = (float)2.0 * atan(tan(((float)PI/(float)3.0) * (float)0.5) * aspect);
-	    		
-	    		float degCv = 180 - degrees(degAv) - 90;
-	    		float lenav = (float)0.5 * (xEnd - xStart);
-	    		
-	    		float degCh = 180 -  degrees(degAh) - 90;
-	    		float lenah = abs((float)0.5 * (yStart - yEnd));
-	    		
-	    		
-	    		if(lenav >= lenah * aspect) {    		
-	    			zPos = abs((lenav *sin(degCv) / sin(degAv)) * (float)-1.0);
-	    			
-	    		}
-	    		else {
-	    			zPos = abs(aspect * (lenah *sin(degCh) / sin(degAh)));
-	    			
-	    		}
-	    		
-    		
+    	
     		}
     	}
     	
