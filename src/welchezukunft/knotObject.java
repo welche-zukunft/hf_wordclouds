@@ -13,12 +13,12 @@ import processing.core.*;
 public class knotObject {
 	PVector position;
 	int id;
-	PApplet parent;
+	wordcloud parent;
 	List<Integer> childs;
 	boolean init = false;
 	String word;
 	
-	knotObject(float x, float y, int id, String word,PApplet parent){
+	knotObject(float x, float y, int id, String word,wordcloud parent){
 		this.position = new PVector(x,y,0);
 		this.id = id;
 		this.word = word;
@@ -44,25 +44,25 @@ public class knotObject {
 	private void placeCircle() {
 		//if only one child circle not visible
 		if(this.childs.size() < 2) {
-			PShape circle = this.parent.createShape();
+			PShape circle = this.parent.parent.createShape();
 			float radius = 0;
 			circle.beginShape(PConstants.TRIANGLE_FAN);
-			circle.fill(timeline.colors.get(this.id));
+			circle.fill(parent.colors.get(this.id));
 			circle.noStroke();
 			circle.vertex(this.position.x, this.position.y);
 			for (int i = 0; i <= 10; i++)   {
-				circle.vertex(this.position.x + (radius * parent.cos(i * parent.TWO_PI / 10f)), (this.position.y + (radius * parent.sin(i * parent.TWO_PI / 10f))));	
+				circle.vertex((float)(this.position.x + (radius * Math.cos(i * PConstants.TWO_PI / 10f))),(float)(this.position.y + (radius * Math.sin(i * PConstants.TWO_PI / 10f))));	
 			}	
 			circle.endShape();
-			timeline.allCircles.addChild(circle);
+			parent.allCircles.addChild(circle);
 		}
 		//if more than one childs visible circle and draw at actual position
 		else if(this.childs.size() >= 2) {	
-			PShape circle = timeline.allCircles.getChild(this.id);
+			PShape circle = parent.allCircles.getChild(this.id);
 			float radius = 100.f+this.childs.size()*10;
 			circle.setVertex(0,position);
 			for (int j = 1; j <= 11; j++)   {
-				PVector v1 = new PVector(this.position.x + (radius * parent.cos(j * parent.TWO_PI / 10f)), (this.position.y + (radius * parent.sin(j * parent.TWO_PI / 10f))));
+				PVector v1 = new PVector((float)(this.position.x + (radius * Math.cos(j * PConstants.TWO_PI / 10f))), (float)(this.position.y + (radius * Math.sin(j * PConstants.TWO_PI / 10f))));
 				circle.setVertex(j, v1);
 			}
 		}
@@ -70,18 +70,18 @@ public class knotObject {
 	}
 	
 	private void connect() {
-		int coly = timeline.colors.get(this.id);
+		int coly = parent.colors.get(this.id);
 		//get count of appearances 
-		int count = (int) timeline.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
+		int count = (int) parent.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
 		
 		// get objects with same id
-		Stream<wordObject> testStream = timeline.words.stream().filter(wordObject -> wordObject.id == this.id);
+		Stream<wordObject> testStream = parent.words.stream().filter(wordObject -> wordObject.id == this.id);
 		List<wordObject> testList = testStream.collect(Collectors.toList());
 		
 		// calculate maxCount
 		int maxCount = 0;
-		if(timeline.knots.size() > 0) {
-			maxCount = timeline.knots.stream()
+		if(parent.knots.size() > 0) {
+			maxCount = parent.knots.stream()
 					.sorted(Comparator.comparing(knotObject::getCount)
 					.reversed())
 					.collect(Collectors.toList()).get(0).childs.size();
@@ -90,14 +90,14 @@ public class knotObject {
 
 		//calculate alpha
 		float div = (float)this.childs.size() / (float)maxCount;
-		float alp = 60f + parent.map(parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
+		float alp = 60f + parent.parent.map(parent.parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
 
 		//create or shift connections
 		for(wordObject w : testList) {
 				int idFilter = testList.indexOf(w);
 				if(idFilter == testList.size()-1) {
 					float deltay = this.position.y - w.pos.y;
-					PShape connection = this.parent.createShape();
+					PShape connection = parent.parent.createShape();
 					connection.beginShape();
 					connection.bezierDetail(30);
 					connection.strokeWeight(2);
@@ -112,15 +112,15 @@ public class knotObject {
 						connection.bezierVertex(this.position.x, this.position.y - (deltay/1f), w.pos.x, w.pos.y+(deltay/1f), w.pos.x,w.pos.y);
 					}
 					connection.endShape();
-					int childID = timeline.connections.getChildCount();
+					int childID = parent.connections.getChildCount();
 					this.childs.add(childID);
-					timeline.connections.addChild(connection);
+					parent.connections.addChild(connection);
 				}
 				
 				else {
-					PShape curve = timeline.connections.getChild(this.childs.get(idFilter));
+					PShape curve = parent.connections.getChild(this.childs.get(idFilter));
 					//TODO change alpha value
-					int col = parent.color(parent.red(coly),parent.green(coly),parent.blue(coly),alp);
+					int col = parent.parent.color(parent.parent.red(coly),parent.parent.green(coly),parent.parent.blue(coly),alp);
 					curve.setStroke(col);
 					PVector v1 = curve.getVertex(0);
 					PVector v2 = curve.getVertex(1);

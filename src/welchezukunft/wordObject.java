@@ -7,10 +7,10 @@ public class wordObject {
 	String word;
 	PVector pos;
 	int id;
-	PApplet parent;
+	wordcloud parent;
 	float init = 1;
 	
-	wordObject(String word,PVector position,int id, PApplet p){
+	wordObject(String word,PVector position,int id, wordcloud p){
 		this.word = word;
 		this.pos = position;
 		this.id = id;
@@ -21,14 +21,15 @@ public class wordObject {
 	private void createBadge(){
 		float halfwidth = 50;
 		float halfheigth = 35;
-		timeline.wordCloud.beginShape(PConstants.QUADS);
-		timeline.wordCloud.noStroke();
-		timeline.wordCloud.fill(timeline.colors.get(this.id));
-		timeline.wordCloud.vertex(this.pos.x - halfwidth,this.pos.y - halfheigth,(float)0.);
-		timeline.wordCloud.vertex(this.pos.x + halfwidth,this.pos.y - halfheigth,(float)0.);
-		timeline.wordCloud.vertex(this.pos.x + halfwidth,this.pos.y + halfheigth,(float)0.);
-		timeline.wordCloud.vertex(this.pos.x - halfwidth,this.pos.y + halfheigth,(float)0.);
-		timeline.wordCloud.endShape();	
+		PShape wcloud = parent.wordCloud;
+		wcloud.beginShape(PConstants.QUADS);
+		wcloud.noStroke();
+		wcloud.fill(parent.colors.get(this.id));
+		wcloud.vertex(this.pos.x - halfwidth,this.pos.y - halfheigth,(float)0.);
+		wcloud.vertex(this.pos.x + halfwidth,this.pos.y - halfheigth,(float)0.);
+		wcloud.vertex(this.pos.x + halfwidth,this.pos.y + halfheigth,(float)0.);
+		wcloud.vertex(this.pos.x - halfwidth,this.pos.y + halfheigth,(float)0.);
+		wcloud.endShape();	
 	}
 	
 
