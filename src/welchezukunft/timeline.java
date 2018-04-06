@@ -14,18 +14,23 @@ import processing.opengl.PShader;
 import static java.lang.Math.toIntExact;
 
 public class timeline extends PApplet{
+	
+	calibrationGui calibrationWin;
+	requestSQL accessSQL;
 
 	static List<wordObject> words;
 	static List<knotObject> knots;
 	static List<Integer> colors;
 	static List<Integer> wordCount;
+	static wordcloudMeta cloud;
 	
-	static List<colorGrad> gradients;
 
 	PVector lookat = new PVector(0,0,400);
 	PVector lastObjectPosition = new PVector(0,0,0);
 	
 	PFont menufont;
+	
+	PImage calibration_img;
 	
 	static PShape wordCloud; 
 	static PShape connections;
@@ -36,6 +41,8 @@ public class timeline extends PApplet{
 	static PShader corner;
 	static PGraphics mainOutput;
 	
+	static boolean init = false;
+	static boolean calibration = false;
 	boolean useshader = false;
 	boolean showall = false;
 	boolean showtext = true;
@@ -49,9 +56,9 @@ public class timeline extends PApplet{
 	float widthBG, newwidthBG;
 	
 	long millis;
-	long millisrun;
+	static long millisrun;
 	//9 minutes per talk
-	int speaktime = 1;
+	int speaktime = 9;
 	long totaltime = 1000 * 60 * speaktime;
 	//time float between 0. - 1.
 	float tposition;
@@ -59,6 +66,8 @@ public class timeline extends PApplet{
 	Random r = new Random();
 	
 	public void settings(){
+		calibrationWin = new calibrationGui(this);
+		accessSQL = new requestSQL(this);
         fullScreen(P3D, SPAN);
         smooth(8);
         
@@ -70,6 +79,7 @@ public class timeline extends PApplet{
         knots = new ArrayList<knotObject>();
         colors = new ArrayList<Integer>();
         wordCount = new ArrayList<Integer>();
+        cloud = new wordcloudMeta(this);
        
         for(int k = 0; k < WordCloudTimeline.words.size(); k++) {
         	wordCount.add(0);
@@ -79,24 +89,29 @@ public class timeline extends PApplet{
     }
 	
 	public void setup(){
-		
 		frameRate(60);
-		
+		//create Processing stuff
 		mainOutput = createGraphics(3840, 1080, P3D);
-		
-		menufont = createFont("Avenir LT 45 Book", 148,true);
-		
 		allCircles = createShape(GROUP);
 		wordCloud = createShape();
 		connections = createShape(GROUP);
 		circle = createShape(ELLIPSE,0,0,10,10);
 		circle.disableStyle();
-
-		corner = loadShader("./resources/shader/corner.glsl");
 		
+		//load externals
+		menufont = createFont("Avenir LT 45 Book", 148,true);
+		calibration_img = loadImage("./resources/pic/diagonal3.png");
+		corner = loadShader("./resources/shader/mapping.glsl");
+		
+		//init internals
 		createTimelineTexture();
+
+		//load data from sql
+		accessSQL.getWordsSetup();
 		
-		loadGradients();
+		if(init == false){
+			init = true; 
+		}
 	}
 
     public void draw(){
@@ -166,19 +181,21 @@ public class timeline extends PApplet{
     	
     	float scl = 1f;
     	
-    	//init FX
-    	for(wordObject w : words){
-			if(w.init > 0.) {
-				mainOutput.pushMatrix();			
-				mainOutput.translate(w.pos.x,w.pos.y,0);
-				float scaleF = (float)1.+ 4f*(1.f - w.init);
-				mainOutput.scale(scaleF);
-				mainOutput.fill(255,255*(w.init));
-				mainOutput.textAlign(CENTER, CENTER);
-				mainOutput.text(w.word,0,0);
-				mainOutput.popMatrix();
-				w.init -= 0.01;
-			}
+    	//init FX - only in realtime modus / not on setup
+    	if(init == true) {
+	    	for(wordObject w : words){
+				if(w.init > 0.) {
+					mainOutput.pushMatrix();			
+					mainOutput.translate(w.pos.x,w.pos.y,0);
+					float scaleF = (float)1.+ 4f*(1.f - w.init);
+					mainOutput.scale(scaleF);
+					mainOutput.fill(255,255*(w.init));
+					mainOutput.textAlign(CENTER, CENTER);
+					mainOutput.text(w.word,0,0);
+					mainOutput.popMatrix();
+					w.init -= 0.01;
+				}
+	    	}
     	}
 		
     	
@@ -199,26 +216,50 @@ public class timeline extends PApplet{
     	mainOutput.endDraw();
     	
     	if(useshader == true) {
-	    	corner.set("mouse",(float)mouseX,(float)mouseY);
-	        corner.set("resolution", (float)width,(float)height);
-	    	corner.set("amount", (float)mouseX);
+	        corner.set("resolution", (float)3840,(float)1080);
+	        
+	        corner.set("lu1",(float)-0.999,(float)0.9991);
+	        corner.set("ru1",(float)0.799,(float)0.0001);
+	        corner.set("ro1",(float)0.999,(float)0.999);
+	        corner.set("lo1",(float)0.001,(float)0.999);
+	        corner.set("lu2",(float)0.001,(float)0.0001);
+	        corner.set("ru2",(float)0.999,(float)0.0001);
+	        corner.set("ro2",(float)0.999,(float)0.999);
+	        corner.set("lo2",(float)0.001,(float)0.999);
+	        
+	    	corner.set("rotateL", (float)0.);
+	    	corner.set("rotateR", (float)0.);
+	    	corner.set("nonlinear", (float)0.);
+	    	corner.set("nonlinear2", (float)0.);
+	    	
 	    	shader(corner);
     	}
     	
-    	image(mainOutput,0,0,1920,540);
-    	image(mainOutput,1920,0);
-		
+    		// ---------------CALIBRATION ------------------
+	    	if(calibration == true) {
+	    		image(calibration_img,3840,0);
+	    	}
+    	
+	    	// ---------------SHOW----------------------
+	    	else {	
+	    		image(mainOutput,1920,0,1920,540);
+	    		image(mainOutput,3840,0);
+	    	}
+	    	
+    	
+    	
     	if(useshader == true) {
     		resetShader();
     	}
-    	
+    	pushMatrix();
+    	translate(1920,0);
     	textSize(13);
     	text("fps: " + frameRate,1720,1020);
     	text("floatposition: " + tposition,1720,1040);
     	millisrun = System.currentTimeMillis() - millis;
     	text("runningtime: " + millisrun,1720,1060);
     	//surface.setTitle("fps: "+ frameRate + "//" + "wordcount = " + words.size());
-    
+    	popMatrix();
     }
     
     
@@ -246,7 +287,7 @@ public class timeline extends PApplet{
 			float seconds = 100f* ((float)toIntExact(millisrun) / (float)toIntExact(totaltime));
 			tposition = (float)seconds/(float)(speaktime*60); 
 
-			int color = gradients.get(0).getColor(tposition);
+			int color = cloud.getColor(tposition);
 
 			colors.add(color);
 			knotid = knots.size();
@@ -294,13 +335,11 @@ public class timeline extends PApplet{
     		  float delta = 1f - (0.5f * (cos(((float)i/(float)heightTimelineTexture)*TWO_PI) + 1f));
     		  timeline.pixels[i] = color(delta * 120f); 
     	  }
-    	  timeline.updatePixels();
-    	
+    	  timeline.updatePixels();	
     }
     
-    public void keyPressed(){
     
-    	
+    public void keyPressed(){
     	if(key == 'w') {
     		//show all
     		if(words.size() > 1) {
@@ -317,8 +356,6 @@ public class timeline extends PApplet{
     			float distancex = 1/(2f * tan((fovx/2)/(xEnd-xStart)));
     			float distancey = 1/(2f * tan((fovy/2)/(maxY*1.05f-minY*1.05f)));
     			zPos = Math.max(distancex, distancey);
-    			
-    	
     		}
     	}
     	
@@ -352,9 +389,4 @@ public class timeline extends PApplet{
                Pclip[2] < Pclip[3];
     }
     
-    private void loadGradients() {
-    	gradients = new ArrayList<colorGrad>();
-    	colorGrad c1 = new colorGrad(230,97,107,44,44,112,this);
-    	gradients.add(c1);
-    }
 }

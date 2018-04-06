@@ -42,21 +42,14 @@ void main(void)
 	*/
 	
     float cha = map(uv.y,0.,1.,0. - mouse.y/resolution.y, 1. + mouse.y/resolution.y);
-   
-    
+
     cha = mix(cha,cubicIn(cha),mouse.x/resolution.x);
     //cha = map(cha,0.,1.,0. + uv.x * mouse.x/resolution.x,1. - uv.x * mouse.x/resolution.x);
    
     if(cha < 0. || cha > 1.) cha = 0.;
-    
     uv.y = cha;  
     vec4 cole = texture2D(texture, uv);
-	
-	
-    
 	if(uv.y == 0.) cole = vec4(0.);
-    
-  
     gl_FragColor = cole;
 
 }
