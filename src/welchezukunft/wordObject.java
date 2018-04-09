@@ -8,13 +8,14 @@ public class wordObject {
 	PVector pos;
 	int id;
 	wordcloud parent;
-	float init = 1;
+	float init;
 	
-	wordObject(String word,PVector position,int id, wordcloud p){
+	wordObject(String word,PVector position,int id, float fxVal, wordcloud p){
 		this.word = word;
 		this.pos = position;
 		this.id = id;
 		this.parent = p;
+		this.init = fxVal;
 		createBadge();
 	}
 	

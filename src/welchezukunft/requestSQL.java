@@ -66,15 +66,15 @@ public class requestSQL {
 				
 			currentMaxId = id;	
 			int test = cloudId;
-			
-			//create new wordcloud
+	
 			boolean wcExists = timeline.clouds.stream().anyMatch(wordcloud -> wordcloud.id == test);
 			
+			//create new wordcloud
 			if(wcExists == false) {
 				wordcloud newcloud = new wordcloud(parent,test);
 				timeline.clouds.add(newcloud);
 				newcloud.id = cloudId;
-				newcloud.createBadge(word, seconds);
+				newcloud.createBadge(word, seconds,false);
 				timeline.currentCloudid = timeline.clouds.size()-1;
 
 			}
@@ -82,7 +82,7 @@ public class requestSQL {
 			//add to old wordcloud
 			else if(wcExists == true) {
 				wordcloud targetCloud = timeline.clouds.stream().filter(wordcloud -> wordcloud.id == test).findFirst().get();
-				targetCloud.createBadge(word, seconds);
+				targetCloud.createBadge(word, seconds,false);
 			}
 			
 		}
@@ -137,45 +137,5 @@ public class requestSQL {
 		
 	}
 
-	private void startBadgeCreationBatch(List<newKeyword> newKeywords) {
 
-	}
-
-
-	
-	/*
-	// Load Database in runtime
-	void updateEvents(){
-	   List<Event> res = new ArrayList<Event>();
-	   //println(currentMaxId);
-	   msql.query("SELECT * FROM event WHERE load_flag = 'LOAD'");
-	   int i = 0;
-	   while(msql.next()){
-	     //check if id is new -> then add to eventlist 
-	     if(msql.getInt(9) > currentMaxId){
-	       Event event = new Event(msql.getInt(9), msql.getString(2), msql.getString(3), msql.getString(8), msql.getFloat(11),msql.getFloat(12),msql.getInt(10),msql.getString(6));
-	       res.add(event);
-	       currentMaxId = msql.getInt(9);
-	       
-	     }
-	     // if event is already in list just update content
-	     else if(msql.getInt(9) <= currentMaxId){
-	       int pos = msql.getInt(9) -1;
-	       eventList.get(pos).setHeadline(msql.getString(8));
-	       eventList.get(pos).setContent(msql.getString(2));
-	       eventList.get(pos).setImagePath(msql.getString(3));
-	       eventList.get(pos).setWorkshopID(msql.getInt(10));
-	       updateGUI();
-	     }
-	     
-	     //println("# ",  i++);
-	     msql.execute("UPDATE event SET load_flag = 'NOLOAD'");
-	     msql.query("SELECT * FROM event WHERE load_flag = 'LOAD'");
-	     
-	     eventList.addAll(res);
-	     updateGUI();
-	   }
-    
-	}
-	*/
 }

@@ -42,7 +42,7 @@ public class knotObject {
 	}
 	
 	private void placeCircle() {
-		//if only one child circle not visible
+		//if only one child = circle not visible
 		if(this.childs.size() < 2) {
 			PShape circle = this.parent.parent.createShape();
 			float radius = 0;
@@ -56,7 +56,7 @@ public class knotObject {
 			circle.endShape();
 			parent.allCircles.addChild(circle);
 		}
-		//if more than one childs visible circle and draw at actual position
+		//if more than one child = visible circle and draw at actual position
 		else if(this.childs.size() >= 2) {	
 			PShape circle = parent.allCircles.getChild(this.id);
 			float radius = 100.f+this.childs.size()*10;
@@ -71,6 +71,7 @@ public class knotObject {
 	
 	private void connect() {
 		int coly = parent.colors.get(this.id);
+		
 		//get count of appearances 
 		int count = (int) parent.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
 		
@@ -86,7 +87,6 @@ public class knotObject {
 					.reversed())
 					.collect(Collectors.toList()).get(0).childs.size();
 		}
-		
 
 		//calculate alpha
 		float div = (float)this.childs.size() / (float)maxCount;
@@ -95,6 +95,7 @@ public class knotObject {
 		//create or shift connections
 		for(wordObject w : testList) {
 				int idFilter = testList.indexOf(w);
+				//do for last object in List
 				if(idFilter == testList.size()-1) {
 					float deltay = this.position.y - w.pos.y;
 					PShape connection = parent.parent.createShape();
@@ -116,7 +117,7 @@ public class knotObject {
 					this.childs.add(childID);
 					parent.connections.addChild(connection);
 				}
-				
+				//do for all Objects except last object
 				else {
 					PShape curve = parent.connections.getChild(this.childs.get(idFilter));
 					//TODO change alpha value

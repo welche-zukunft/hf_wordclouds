@@ -97,7 +97,7 @@ public class calibrationGui {
 		    json.setInt(label3[i],vals3[i]);
 		  }  
 
-		  parent.saveJSONObject(json, "data/new.json");
+		  parent.saveJSONObject(json, "./resources/data/new.json");
 		  System.out.println("SAVED !!");
 		}
 	
@@ -203,6 +203,9 @@ public class calibrationGui {
 	  ranges3[1][0] = 1900;
 	  ranges3[1][1] = 2000;
 	
+	  
+	  
+	  
 	}
 
 	void createCalibGui(){
@@ -254,12 +257,12 @@ public class calibrationGui {
 	    } 
 	    //row1b: VALUE
 	    for(int i =0; i < label.length; i++) {
-	        anzeigen[i] = new JLabel(Integer.toString(vals[i]),SwingConstants.CENTER);
+	        anzeigen[i] = new JLabel(Float.toString((float)vals[i]/1000.0f),SwingConstants.CENTER);
 	        panel0.add(anzeigen[i]);
 	    }  
 	    //row2: SLIDER
 	     for(int i =0; i < label.length; i++) {   
-	        JSlider thisvalue = new JSlider(JSlider.VERTICAL, ranges[i][0], ranges[i][1], vals[i]);
+	        JSlider thisvalue = new JSlider(JSlider.VERTICAL, -500, 1500, vals[i]);
 	        thisvalue.setName(Integer.toString(i));
 	        thisvalue.addChangeListener(new ChangeListener() {
 	            public void stateChanged(ChangeEvent e) {
@@ -278,39 +281,39 @@ public class calibrationGui {
 	    }  
 	    //row3b: VALUE
 	    for(int i =0; i < label2.length; i++) {
-	        anzeigen2[i] = new JLabel(Integer.toString((int)((float)(vals2[i])/(float)(ranges2[i][2]))),SwingConstants.CENTER);
+	        anzeigen2[i] = new JLabel(Float.toString(((float)(vals2[i])/1000.0f)),SwingConstants.CENTER);
 	        panel0b.add(anzeigen2[i]);
 	    }   
 	     for(int i =0; i < label2.length; i++) {   
-	        JSlider thisvalue = new JSlider(JSlider.VERTICAL, ranges2[i][0], ranges2[i][1], vals2[i]);
+	        JSlider thisvalue = new JSlider(JSlider.VERTICAL, -500, 1500, vals2[i]);
 	        thisvalue.setName(Integer.toString(i));
 	        thisvalue.addChangeListener(new ChangeListener() {
 	            public void stateChanged(ChangeEvent e) {
 	                String name = ((JSlider)e.getSource()).getName();
 	                vals2[Integer.parseInt(name)] = ((JSlider)e.getSource()).getValue();
-	                anzeigen2[Integer.parseInt(name)].setText(Integer.toString((int)((float)(vals2[Integer.parseInt(name)])/(float)(ranges2[Integer.parseInt(name)][2]))));
+	                anzeigen2[Integer.parseInt(name)].setText(Float.toString(((float)(vals2[Integer.parseInt(name)])/1000.0f)));
 	            }
 	       
 	        });
 	     panel1b.add(thisvalue);
 	    }
-	   
+	   /*
 	   for(int i = label3.length-1; i>=0; i--){
 	     panel2.add(new JLabel(label3[i]));
 	     anzeigen3[i] = new JLabel(Integer.toString(vals3[i]));
 	     panel2.add(anzeigen3[i]);
-	     JSlider slider = new JSlider(JSlider.HORIZONTAL, ranges3[i][0], ranges3[i][1], vals3[i]);
+	     JSlider slider = new JSlider(JSlider.HORIZONTAL, -500, 1500, vals3[i]);
 	     slider.setName(Integer.toString(i));
 	     slider.addChangeListener(new ChangeListener() {
 	              public void stateChanged(ChangeEvent e) {
 	                  String name = ((JSlider)e.getSource()).getName();              
 	                  vals3[Integer.parseInt(name)] = ((JSlider)e.getSource()).getValue();
-	                  anzeigen3[Integer.parseInt(name)].setText(Integer.toString(vals3[Integer.parseInt(name)]));
+	                  anzeigen3[Integer.parseInt(name)].setText(Float.toString(vals3[Integer.parseInt(name)]/1000.0f));
 	              }
 	          });
 	     panel2.add(slider);
 	   }
-	 
+	 */
 	  //Button CLOSE
 	  button = new JButton("CLOSE");
 	  panel3.add(button);  
@@ -336,6 +339,7 @@ public class calibrationGui {
 	    }
 	  }
 	});
+	  
 	  button3 = new JButton("CALIBRATE/WORK");
 	  panel3.add(button3);  
 	  
@@ -367,9 +371,5 @@ public class calibrationGui {
 	
 	}
 
-  /*
-	void closing(){
-	  frame.dispose();
-	}
-*/
+  
 }

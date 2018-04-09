@@ -2,7 +2,6 @@
 #define HALF_PI 1.5707963267948966
 #endif
 
-#define PROCESSING_TEXTURE_SHADER
 
 float cross2( in vec2 a, in vec2 b ) {
 	return a.x*b.y - a.y*b.x;
@@ -43,11 +42,12 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
   return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
 }
 
+
 float sineIn(float t) {
   return sin((t - 1.0) * HALF_PI) + 1.0;
 }
 
-uniform vec2 resolution;
+uniform vec2 size;
 uniform float rotateL;
 uniform float rotateR;
 uniform float uniformL;
@@ -65,60 +65,72 @@ uniform vec2 lo2;
 
 uniform sampler2D texture;
 
+uniform float nonlinear;
+uniform float nonlinear2;
 
 varying vec4 vertTexCoord;
 
 void main(void){
 
-    vec2 pos1 = vec2(0.0001,0.0001); //lu
-    vec2 pos2 = vec2(0.7999,0.0001); //ru
-    vec2 pos3 = vec2(0.9999,0.9999);//ro
-    vec2 pos4 = vec2(0.00001,0.9999);//lo
-
     //count
     float c = 2.;
+
     //aspect
-    float aspect = resolution.x / resolution.y;
-    aspect = vertTexCoord.x / vertTexCoord.y;
+    float aspect = size.x / size.y;
 
-    float nonlinear = uniformL;
-    float nonlinear2 = uniformR;
+    vec2 uv =  vertTexCoord.xy;
 
-    vec2 uv = vertTexCoord.xy;
     vec2 uv2 = uv;
 
-    float u_angle = rotateL;
-    float sin_factor = sin(u_angle);
-    float cos_factor = cos(u_angle);
-    uv = vec2((uv.x -0.5) * aspect, uv.y - 0.5 ) * mat2(cos_factor, sin_factor, -sin_factor, cos_factor);
+    float sin_factor = sin(rotateL);
+    float cos_factor = cos(rotateL);
+    /*
+    uv = vec2((uv.x - 0.5) * (3840 / 1080), uv.y - 0.5) * mat2(cos_factor, sin_factor, -sin_factor, cos_factor);
+    uv.x += 0.5;
+     */
+    //(uv = vec2((uv.x - 0.5), uv.y - 0.5) * mat2(cos_factor, sin_factor, -sin_factor, cos_factor);
+    //uv += 0.5;
+    vec3 tcol = vec3(uv.x);
 
-    float u_angle2 = rotateR;
-    float sin_factor2 = sin(u_angle2);
-    float cos_factor2 = cos(u_angle2);
-    uv2 = vec2((uv2.x -0.5) * aspect, uv2.y - 0.5 ) * mat2(cos_factor2, sin_factor2, -sin_factor2, cos_factor2);
+    //tcol = texture2D(texture, uv).xyz;
 
-    uv.x += 1.;
+
+
+
+
+/*
+    float sin_factor2 = sin(rotateR);
+    float cos_factor2 = cos(rotateR);
+    uv2 = vec2((uv2.x + 0.5) * aspect, uv2.y - 0.5 ) * mat2(cos_factor2, sin_factor2, -sin_factor2, cos_factor2);
+*/
+
+    uv.x *= size.y/(0.5*size.x);
+    uv.x += 0.5;
     uv.y += 0.5;
-    uv.x *= 0.5;
 
     vec2 texUv;
     vec2 texUv2;
 
-    uv2.x *= 2.;
-    uv.x *= 2.;
+    //uv2.x *= 2.;
+    //uv.x *= 2.;
 
-    //texUv = invBilinear(uv2,pos1,pos2,pos3,pos4);
-    texUv = invBilinear(uv2,lu1,ru1,ro1,lo1);
-    texUv.y = mix(texUv.y,sineIn(texUv.y),nonlinear);
+    vec2 lu1a = lu1;
+    vec2 ru1a = ru1;
+    vec2 ro1a = ro1;
+    vec2 lo1a = lo1;
 
+    texUv = invBilinear(uv,lu1a,ru1a,ro1a,lo1a);
 
+    //texUv.y = mix(texUv.y,sineIn(texUv.y),nonlinear);
+
+ /*
     pos1.x += 1.;
     pos2.x += 1.;
     pos3.x += 1.;
     pos4.x += 1.;
+*/
 
-
-    texUv2 = invBilinear(uv,pos1,pos2,pos3,pos4);
+    texUv2 = invBilinear(uv2,lu2,ru2,ro2,lo2);
     //texUv2 = invBilinear(uv,lu2,ru2,ro2,lo2);
  	texUv2.y = mix(texUv2.y,sineIn(texUv2.y),nonlinear2);
 
@@ -140,13 +152,14 @@ void main(void){
     }
 
 
-    // Output to screen
-    gl_FragColor = vec4(color,1.0);
 
-    /*
-    vec2 uv3 = vertTexCoord.xy;
-    vec3 color3 = texture2D(texture, uv3).xyz;
-    gl_FragColor = vec4(color3,1.);
-    */
+    gl_FragColor = vec4(vec3(tcol),1.);
+    // Output to screen
+    //gl_FragColor = vec4(color + color2,1.0);
+
+
+    //vec3 color3 = texture2D(texture, uv).xyz;
+    //gl_FragColor = vec4(color3,1.);
+
 
 }

@@ -17,16 +17,26 @@ public class batchCreator implements Runnable {
 				List<newKeyword> keywords = blockingQueue.take();
 				
 				for (newKeyword keyword : keywords) {
-					//check if word was already used
+					//check if cloud was already used
 					Optional<wordcloud> targetWC = timeline.clouds.stream().filter(wordcloud -> wordcloud.id == keyword.index).findFirst();
 					int posinArray = 0;
+					//if cloud is already present
 					if(targetWC.isPresent()) {
-						//TODO get correct index
-						posinArray = timeline.clouds.indexOf(targetWC);		
-						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds);
+						//get position in cloud-array to access right cloud
+						posinArray = timeline.clouds.indexOf(targetWC.get());
+						//create badge
+						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,true);
 					}
-					
-					
+					else if(targetWC.isPresent()==false) {
+						//create new cloud
+						wordcloud target = new wordcloud(WordCloudTimeline.timeLine,keyword.index);
+						timeline.clouds.add(target);
+						posinArray = timeline.clouds.size()-1;
+						//create badge
+						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,true);
+						
+					}
+					//wait
 					Thread.sleep(8000/keywords.size());
 				}
 				
