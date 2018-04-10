@@ -366,7 +366,7 @@ public class calibrationGui {
 	  mainPanel.add(panel3);
 	  calframe.add(mainPanel);
 	  calframe.pack(); 
-	  calframe.setVisible(true);
+	  calframe.setVisible(false);
 	  
 	
 	}

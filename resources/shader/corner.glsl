@@ -95,8 +95,12 @@ void main(void){
 	// Normalized pixel coordinates (from 0 to 1)
     vec2 uv = gl_FragCoord.xy/resolutionIn.xy;
     uv = vertTexCoord.xy;
-	uv.y = 1.-uv.y;
+    uv.x = 1. - uv.x;
+    uv.y = 1.- uv.y;
+
 	vec2 uv2 = uv;
+
+
 
 	uv.x *= (resolutionIn.x / resolutionIn.y);
 	uv2.x *= (resolutionIn.x / resolutionIn.y);
@@ -113,14 +117,17 @@ void main(void){
 	uv.x /= (resolutionIn.x  / resolutionIn.y);
 	uv2.x /= (resolutionIn.x  / resolutionIn.y);
 
-	vec2 texUv = invBilinear(uv,lu1,ru1,ro1,lo1);
+	vec2 texUv = invBilinear(uv,lo1,ro1,ru1,lu1);
+
 	texUv.y = mix(texUv.y,sineIn(texUv.y),nonlinearL);
+	texUv.y = 1.-texUv.y;
 	vec3 col = texture2D(texture, texUv).xyz;
 	if(texUv.x < 0. || texUv.x > 0.5) col = vec3(0.,0.,0.);
 	if(texUv.y < 0. || texUv.y > 1.) col = vec3(0.,0.,0.);
 
-	vec2 texUv2 = invBilinear(uv2,lu2,ru2,ro2,lo2);
+	vec2 texUv2 = invBilinear(uv2,ru2,lu2,lo2,ro2);
 	texUv2.y = mix(texUv2.y,sineIn(texUv2.y),nonlinearR);
+	texUv2.x = 0.5+(1. - texUv2.x);
 	vec3 col2 = texture2D(texture, texUv2).xyz;
 	if(texUv2.x < 0.5 || texUv2.x > 1.) col2 = vec3(0.,0.,0.);
 	if(texUv2.y < 0. || texUv2.y > 1.) col2 = vec3(0.,0.,0.);

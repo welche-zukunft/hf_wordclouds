@@ -17,9 +17,11 @@ import java.util.concurrent.BlockingQueue;
 
 
 public class requestSQL {
-
 	MySQL msql;
 	MySQL timestampMsql;
+	
+	MySQL eventsMsql;
+	MySQL eventsTimestampMsql;
 	
 	boolean sql=true;
 	
@@ -38,6 +40,12 @@ public class requestSQL {
 	
 	    timestampMsql = new MySQL(parent, "localhost", database, user, pass );
 	    timestampMsql.connect();
+	    
+	    eventsMsql = new MySQL(parent, "localhost", database, user, pass );
+	    eventsMsql.connect();
+	    
+	    eventsTimestampMsql = new MySQL(parent, "localhost", database, user, pass );
+	    eventsTimestampMsql.connect();
 	    
 	    sentenceQueue = new ArrayBlockingQueue<List<newKeyword>>(512);
 	    batchCreator bCreator = new batchCreator(sentenceQueue);
@@ -136,6 +144,58 @@ public class requestSQL {
 		}
 		
 	}
+	
+	public List<Event> getNewEventsSetup(){
+		   List<Event> res = new ArrayList<Event>();
+		   //println(currentMaxId);
+		   eventsMsql.query("SELECT * FROM event");
+		   int i = 0;
+		   while(eventsMsql.next()){
+			  
+		     Event event = new Event(eventsMsql.getInt(11), eventsMsql.getString(2), eventsMsql.getString(4), eventsMsql.getString(10), eventsMsql.getFloat(13),eventsMsql.getFloat(14),eventsMsql.getInt(12),eventsMsql.getString(8));
+		     res.add(event);
+		     //println("# ",  i++);
+		     currentMaxId = eventsMsql.getInt(11);
+		     eventsMsql.query("UPDATE event SET load_flag = 'NOLOAD'");
+		     eventsMsql.query("SELECT * FROM event WHERE vertex_id > %s", currentMaxId);
+		   }
+		   
+		   return res;
+		}
 
-
+		// Load Database in runtime
+		void updateEvents(){
+		   List<Event> res = new ArrayList<Event>();
+		   //println(currentMaxId);
+		   this.eventsMsql.query("SELECT * FROM event WHERE load_flag = 'LOAD'");
+		   int i = 0;
+		   while(this.eventsMsql.next()){
+		     //check if id is new -> then add to eventlist 
+		     if(this.eventsMsql.getInt(11) > this.currentMaxId){
+		       Event event = new Event(this.eventsMsql.getInt(11), this.eventsMsql.getString(2), this.eventsMsql.getString(4), this.eventsMsql.getString(10), this.eventsMsql.getFloat(13),this.eventsMsql.getFloat(14),this.eventsMsql.getInt(12),this.eventsMsql.getString(8));
+		       res.add(event);
+		       this.currentMaxId = this.eventsMsql.getInt(11);
+		       
+		     }
+		     
+		     // if event is already in list just update content
+		     else if(this.eventsMsql.getInt(11) <= this.currentMaxId){
+		    	 System.out.println(this.eventsMsql.getInt(11) + "/ " +this.currentMaxId);
+		       int pos = this.eventsMsql.getInt(11) - 1;
+		       timeline.eventLine.eventList.get(pos).setHeadline(eventsMsql.getString(10));
+		       timeline.eventLine.eventList.get(pos).setContent(eventsMsql.getString(2));
+		       timeline.eventLine.eventList.get(pos).setImagePath(eventsMsql.getString(4));
+		       timeline.eventLine.eventList.get(pos).setWorkshopID(eventsMsql.getInt(12));
+		       timeline.eventLine.userGui.updateGUI();
+		     }
+		     
+		     //println("# ",  i++);
+		     this.eventsMsql.execute("UPDATE event SET load_flag = 'NOLOAD'");
+		     this.eventsMsql.query("SELECT * FROM event WHERE load_flag = 'LOAD'");
+		     
+		     timeline.eventLine.eventList.addAll(res);
+		     timeline.eventLine.userGui.updateGUI();
+		   }
+		}
+		  		
 }
