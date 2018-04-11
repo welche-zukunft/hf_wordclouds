@@ -15,21 +15,22 @@ public class logo {
 	boolean showlogo = false;
 	
 	PGraphics logoPlane;
-	eventTimeline parent;
+	timeline parent;
 	
 	Thread t1;
 	
-	public logo(eventTimeline parent) {
+	public logo(timeline parent) {
 		this.parent = parent;
-		this.logoPlane = parent.parent.createGraphics(parent.imgwidth,parent.imgheight,PConstants.P3D);
+		this.logoPlane = parent.createGraphics(parent.sizeTableX,parent.sizeTableY,PConstants.P3D);
 	}
 	
+	//TODO: make drawlogo a thread 
 	void drawlogo(){
 		 this.logoPlane.beginDraw();
 		 this.logoPlane.clear();
 		 //this.logoPlane.background(0);
 		 this.logoPlane.fill(0);
-		 this.logoPlane.textFont(parent.effectfont);
+		 this.logoPlane.textFont(timeline.eventLine.effectfont);
 		 this.logoPlane.textSize(288);
 		 this.logoPlane.rotateZ((float)Math.toRadians(-11));
 		 this.logoPlane.translate(-175,350,0);
@@ -38,9 +39,9 @@ public class logo {
 		 this.logoPlane.fill(255,255,255,230);
 		 String word1 = "WELCHE";
 		 float textwidth = this.logoPlane.textWidth(word1);
-		 this.logoPlane.rect((this.logoPlane.width * parent.parent.map(logoPosFinal,0f,1f,1.5f,0.45f))-textwidth/2.f,this.logoPlane.height/2.f,this.logoPlane.width,-1.f*this.logoPlane.height);
+		 this.logoPlane.rect((this.logoPlane.width * parent.map(this.logoPosFinal,0f,1f,1.5f,0.45f))-textwidth/2.f,this.logoPlane.height/2.f,this.logoPlane.width,-1.f*this.logoPlane.height);
 		 this.logoPlane.fill(0);
-		 this.logoPlane.translate(this.logoPlane.width * parent.parent.map(logoPosFinal,0f,1f,1.5f,0.45f),(this.logoPlane.height/2.f)+60f,0f);
+		 this.logoPlane.translate(this.logoPlane.width * parent.map(this.logoPosFinal,0f,1f,1.5f,0.45f),(this.logoPlane.height/2.f)+60f,0f);
 		 this.logoPlane.textAlign(PConstants.CENTER,PConstants.BOTTOM);
 		 this.logoPlane.text(word1,0,0);
 		 this.logoPlane.popMatrix();
@@ -49,26 +50,20 @@ public class logo {
 		 this.logoPlane.fill(255,255,255,230);
 		 String word2 = "ZUKUNFT ?!";
 		 float textwidth2 = this.logoPlane.textWidth(word2);
-		 this.logoPlane.rect((this.logoPlane.width * parent.parent.map(logoPosFinal,0f,1f,-0.5f,0.55f)) +textwidth2/2.f,this.logoPlane.height/2.f,this.logoPlane.width * -1.f,this.logoPlane.height);
+		 this.logoPlane.rect((this.logoPlane.width * parent.map(logoPosFinal,0f,1f,-0.5f,0.55f)) +textwidth2/2.f,this.logoPlane.height/2.f,this.logoPlane.width * -1.f,this.logoPlane.height);
 		 this.logoPlane.fill(0);
-		 this.logoPlane.translate(this.logoPlane.width * parent.parent.map(logoPosFinal,0f,1f,-0.5f,0.55f),(this.logoPlane.height/2.f)-60,0f);
+		 this.logoPlane.translate(this.logoPlane.width * parent.map(logoPosFinal,0f,1f,-0.5f,0.55f),(this.logoPlane.height/2.f)-60,0f);
 		 this.logoPlane.textAlign(PConstants.CENTER,PConstants.TOP);
 		 this.logoPlane.text(word2,0,0);
 		 this.logoPlane.popMatrix(); 
 
 		 this.logoPlane.endDraw();
 		 //parent.parent.thread("movelogos")
-		 t1 = new Thread(new Runnable() {
-	         public void run() {
-	        	 movelogos();
-	         }
-		    });  
-		    t1.start();
+		 this.movelogos();
 		}
 		
 
 		void movelogos(){
-    		System.out.println("thread running");
 		  if(this.animatelogo == true){
 			 this.logoPos = this.logoPos + (this.fontspeed * this.direction);
 			 this.logoPosFinal = Ease.sinOut(this.logoPos);
@@ -79,6 +74,7 @@ public class logo {
 		  }
 		  else if (this.logoPos <= 0.01) {
 			this.direction = 1;
+			this.animatelogo = false;  
 		    this.showlogo = false;
 		  }
 		}

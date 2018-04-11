@@ -22,12 +22,6 @@ public class eventTimeline {
 	public static PShape objectTimeline;
 	public static PShape connections;
 	
-	public static PShape monitor;
-	public static PShader monitorzoom;
-	public static PShader blur;
-	public static float zoommonitor = 0;
-	public static boolean showzoommonitor = true;
-	public static float zoomsmooth = 0;
 	
 	//size of eventBadges
 	public static int size = 7;
@@ -49,7 +43,6 @@ public class eventTimeline {
 	
 	// show timeline or deleted objects
 	public static boolean showWSselection = false;
-	public static boolean showlogo = false;
 	//status new events
 	public static boolean newpending = false;
 	public static int currentWSselection = 0;
@@ -64,7 +57,7 @@ public class eventTimeline {
 	
 	public static int moving = 0;
 	
-	public static logo logoWZ;
+
 	public static eventBackground eventBack;
 	public static eventTimelineMenu menu;
 	public static connectionLabel connLabel;
@@ -125,7 +118,7 @@ public class eventTimeline {
 		for(int i = 0; i < cols.length;i++){
 		   this.cols_rgb[i] = parent.unhex("FF"+cols[i]);
 		 }
-		this.logoWZ = new logo(this);
+		
 		this.eventBack = new eventBackground(this);
 		this.menu = new eventTimelineMenu(this);
 		this.connLabel = new connectionLabel(this);
@@ -140,25 +133,8 @@ public class eventTimeline {
 		this.accessPlane = parent.createGraphics(accesradius,accesradius,PConstants.P3D);
 		this.contentPlane.textFont(this.menufont);
 		this.contentPlane.textSize(10);
-		this.statusPlane = parent.createGraphics(imgwidth, imgheight, PConstants.P3D);
-		
-		this.monitor = parent.createShape();
-		this.monitor.beginShape(PConstants.QUADS);
-		this.monitor.textureMode(PConstants.NORMAL);
-		this.monitor.vertex(1920,0,0.125f,1);
-		this.monitor.vertex(3840,0,0.875f,1);
-		this.monitor.vertex(3840,720,0.875f,0);
-		this.monitor.vertex(1920,720,0.125f,0);
-		this.monitor.texture(mainPlane);
-		this.monitor.endShape();
-
-		this.monitorzoom = parent.loadShader("./resources/shader/monitorzoom2_frag.glsl");
-		this.monitorzoom.set("tex", mainPlane);
-		this.monitorzoom.set("zoom",zoommonitor);
-		this.monitorzoom.set("mousedrag",0.f, 0.f);
-		  
-		blur = parent.loadShader("./resources/shader/blur.glsl");
-		
+		this.statusPlane = parent.createGraphics(1200, 50, PConstants.P3D);
+	
 		images = new PImage[57];
 		  for(int i = 0; i < 57; i++){
 		   images[i] = parent.requestImage("./resources/img/" + (i+1) + ".jpg"); 
@@ -168,6 +144,7 @@ public class eventTimeline {
 		 eventList.addAll(database.getNewEventsSetup());
 		  
 		 userGui.updateGUI();
+		 this.cameraPosZ = 400;
 	}
 	
 	public void drawing() {
@@ -194,9 +171,9 @@ public class eventTimeline {
 		        this.menu.drawstatus();
 		    }
 		    
-		     if(this.showlogo == true){ 
-		        logoWZ.drawlogo(); 
-		     }
+		    if(timeline.showlogo == true){
+		    	timeline.logoWZ.drawlogo();
+		    } 
 		     
 		    this.mainPlane.beginDraw();
 		    this.mainPlane.background(125);
@@ -207,7 +184,7 @@ public class eventTimeline {
 		    if(this.showWSselection == true){
 			     this.mainPlane.pushMatrix();
 			     this.mainPlane.translate(this.mainPlane.width - 550.f,this.mainPlane.height/2.f,0);
-			     this.mainPlane.rotateZ((int)Math.toRadians(-90));
+			     this.mainPlane.rotateZ(parent.radians(-90.0f));
 			     this.mainPlane.image(this.statusPlane,-this.statusPlane.width/2.f,-this.statusPlane.height/2.f);
 			     this.mainPlane.popMatrix();     
 		    }
@@ -233,9 +210,9 @@ public class eventTimeline {
 		    	this.mainPlane.image(accessPlane, this.accessx-(this.accesradius/2),this.accessy-(this.accesradius/2));
 		    }
 
-		    if(showlogo == true){
-		    	this.mainPlane.image(logoWZ.logoPlane,0,0);
-		    }  
+		    if(timeline.showlogo == true){
+		    	this.mainPlane.image(timeline.logoWZ.logoPlane,0,0);
+		    } 
 
 		    if(newpending == true){
 		    	this.mainPlane.pushMatrix();
@@ -443,7 +420,7 @@ public class eventTimeline {
 
 		void OSCPressed(float x,float y){
 		  if(this.autozoom == true){ 
-			  this.zoommonitor = 1.f;
+			  timeline.zoommonitor = 1.f;
 		  }
 		  if(this.access == false){
 		    startaccess(x,y);
@@ -604,7 +581,7 @@ public class eventTimeline {
 		}
 
 		void OSCReleased(){
-		  zoommonitor = 0.f;
+		  timeline.zoommonitor = 0.f;
 		  this.menu.clearMenu();
 		  wPressed = sPressed = aPressed =  dPressed =  shiftPressed = qPressed = rPressed = false;
 		  this.menu.currentButton = 0;
@@ -1089,10 +1066,9 @@ public class eventTimeline {
 	 
 	  PVector f = floorPosition.get(); // Position of the floor
 	  PVector n = floorDirection.get(); // The direction of the floor ( normal vector )
-	
+	  
 	  PVector w = unProject(screen_x, screen_y, -1.0f); // 3 -dimensional coordinate corresponding to a point on the screen
 	  PVector e = getEyePosition(); // Viewpoint position
-	  //println(w,e);
 	  // Computing the intersection of  
 	  f.sub(e);
 	  w.sub(e);
@@ -1130,21 +1106,18 @@ public class eventTimeline {
  
 	//Function to compute the transformation matrix to the window coordinate system from the local coordinate system
 	PMatrix3D getMatrixLocalToWindow() {
-	  PMatrix3D projection = ((PGraphics3D)contentPlane).projection; 
-	  PMatrix3D modelview = ((PGraphics3D)contentPlane).modelview;   
-	 
+	  PMatrix3D projection = ((PGraphics3D)this.contentPlane).projection; 
+	  PMatrix3D modelview = ((PGraphics3D)this.contentPlane).modelview;   
+
 	  // viewport transf matrix
 	  PMatrix3D viewport = new PMatrix3D();
 	  viewport.m00 = viewport.m03 = windowwidth/2;
 	  viewport.m11 = -windowheight/2;
 	  viewport.m13 = windowheight/2;
-	 
-	
-	 
+
 	  // Calculate the transformation matrix to the window coordinate system from the local coordinate system
 	  viewport.apply(projection);
 	  viewport.apply(modelview);
-	
 	  return viewport;
 	}
 }

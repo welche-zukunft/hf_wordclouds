@@ -1,30 +1,80 @@
 [
 	{
-		"redS":230,
-		"greenS":97,
-		"blueS":107,
-		"redE":44,
-		"greenE":44,
-		"blueE":112,
-		"fontC":255
+		"color1":"#e1eec3",
+		"color2":"#f05053",
+		"fontC1":255,
+		"fontC2":200
 	},
 	{
-		"redS":249,
-		"greenS":248,
-		"blueS":113,
-		"redE":0,
-		"greenE":143,
-		"blueE":122,
-		"fontC":255
+		"color1":"#22c1c3",
+		"color2":"#fdbb2d",
+		"fontC1":255,
+		"fontC2":200
 	},
 	{
-		"redS":249,
-		"greenS":248,
-		"blueS":113,
-		"redE":0,
-		"greenE":143,
-		"blueE":122,
-		"fontC":255
+		"color1":"#43c6ac",
+		"color2":"#191654",
+		"fontC1":200,
+		"fontC2":255
+	},
+	{
+		"color1":"#e1eec3",
+		"color2":"#f05053",
+		"fontC1":255,
+		"fontC2":200
+	},
+	{
+		"color1":"#22c1c3",
+		"color2":"#fdbb2d",
+		"fontC1":255,
+		"fontC2":200
+	},
+	{
+		"color1":"#43c6ac",
+		"color2":"#191654",
+		"fontC1":200,
+		"fontC2":255
+	},
+	{
+		"color1":"#e1eec3",
+		"color2":"#f05053",
+		"fontC1":255,
+		"fontC2":200
+	},
+	{
+		"color1":"#22c1c3",
+		"color2":"#fdbb2d",
+		"fontC1":255,
+		"fontC2":200
+	},
+	{
+		"color1":"#43c6ac",
+		"color2":"#191654",
+		"fontC1":200,
+		"fontC2":255
+	},
+	{
+		"color1":"#43c6ac",
+		"color2":"#191654",
+		"fontC1":200,
+		"fontC2":255
+	},
+	{
+		"color1":"#22c1c3",
+		"color2":"#fdbb2d",
+		"fontC1":255,
+		"fontC2":200
+	},
+	{
+		"color1":"#43c6ac",
+		"color2":"#191654",
+		"fontC1":200,
+		"fontC2":255
+	},
+	{
+		"color1":"#43c6ac",
+		"color2":"#191654",
+		"fontC1":200,
+		"fontC2":255
 	}
-	
 ]

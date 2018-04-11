@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.Random;
 
 import processing.core.*;
+import processing.data.JSONArray;
+import processing.data.JSONObject;
 import processing.opengl.PGraphics3D;
+import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PShader;
 
 public class timeline extends PApplet{
@@ -16,7 +19,11 @@ public class timeline extends PApplet{
 	public static requestSQL accessSQL;
 
 	static List<wordcloud> clouds;
+	static List<workshopinfo> workshops;
+	static List<colorGradient> colorGradients;
 	static wordcloud curCloud;
+	static logo logoWZ;
+	
 	
 	PVector lookat = new PVector(0,0,400);
 	
@@ -24,18 +31,29 @@ public class timeline extends PApplet{
 	PImage calibration_img;
 	static PImage timeline;
 	static PShader corner;
+	static PShader monitorzoom;
+	static PShader gradientShader;
 	static PGraphics mainOutput;
 	static PGraphics caliOutput;
+	static PGraphics wordcloudOutput;
+	static PGraphics wordcloudstatus;
 	
 	PShape displayKW, displayCR, display2;
-
+	PShape statusGradient;
+	PShape monitor;
+	
+	public static float zoommonitor = 0;
+	public static boolean showzoommonitor = true;
+	public static float zoomsmooth = 0;
+	
 	static boolean init = false;
 	static boolean initscale = false;
-	static boolean calibration = true;
+	static boolean calibration = false;
 	boolean useshader = true;
 	boolean showall = false;
 	boolean showtext = true;
 	boolean cloudExist = false;
+	static boolean showlogo = false;
 	
 	float zPos = 400;	
 	float aspect;
@@ -49,6 +67,8 @@ public class timeline extends PApplet{
 	float tposition;
 	
 	Random r = new Random();
+
+	
 	
 	static int currentCloudid = 0;
 	static int wordFocus = 0;
@@ -60,44 +80,61 @@ public class timeline extends PApplet{
     
     static PVector mousePos;
     
+    static int sizeTableX = 3840;
+    static int sizeTableY = 1080;
+    
 	public void settings(){
 		calibrationWin = new calibrationGui(this);
 		accessSQL = new requestSQL(this);
+		loadWorkshopInfos();
+
         fullScreen(P3D, SPAN);
-        smooth(8);
+        smooth(16);
         
         widthBG = width;
         newwidthBG = widthBG;
-        aspect = (3840/1080);
+        aspect = (this.sizeTableX/this.sizeTableY);
         
         clouds = new ArrayList<wordcloud>();
+        colorGradients = new ArrayList<colorGradient>();
     }
 	
 	public void setup(){
 		frameRate(60);
 		//create Processing stuff
-		mainOutput = createGraphics(3840, 1080, P3D);
-		caliOutput = createGraphics(3840, 1080, P3D);
+		mainOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
+		wordcloudOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
+		caliOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
+		wordcloudstatus = createGraphics(this.sizeTableX,300,P3D);
 
 		//load externals
 		menufont = createFont("Avenir LT 45 Book", 148,true);
 		calibration_img = loadImage("./resources/pic/diagonal3.png");
 		corner = loadShader("./resources/shader/corner.glsl");
-		
-		//load data from sql
-		accessSQL.getWordsSetup();
 
-		eventLine = new eventTimeline(3840,1080,this);	
+		gradientShader = loadShader("./resources/shader/gradient.glsl");
 		
+		//init EventTimeline
+		eventLine = new eventTimeline(this.sizeTableX,this.sizeTableY,this);	
 		//create menu buttons
 		eventLine.menu.createButtons();
 		eventLine.menu.createButtonsEvent();
 
 		//init internals
 		createTimelineTexture();
-		createDisplay();		
+		createDisplay();	
+		createMonitor();
+		createStatusGradient();
+		loadGradients();
+		
+		//load data from sql
+		accessSQL.getWordsSetup();
+
+		this.logoWZ = new logo(this);
 		
 		if(init == false){
+			//for some reason we have to call postdraw once before drawing events (?)
+			eventLine.postdraw();
 			init = true; 
 		}
 	}
@@ -117,6 +154,8 @@ public class timeline extends PApplet{
 	
     	// ---------------SHOW----------------------
     	else if(calibration == false) {	
+
+    		
     		if(modus == mode.KEYWORDS) {
 			     if(init == true && clouds.size()>0) {
 			    	mainOutput.beginDraw();
@@ -128,9 +167,11 @@ public class timeline extends PApplet{
 				    curCloud = clouds.get(currentCloudid);
 				    
 				    //draw timeline
+				    //TODO: calculate correct position right
 				    mainOutput.noStroke();
 			    	if(curCloud.words.size() > 0) {
-			    		newwidthBG = (widthBG < curCloud.words.get(curCloud.words.size()-1).pos.x) ? curCloud.words.get(curCloud.words.size()-1).pos.x : widthBG  ;
+			    		//newwidthBG = (widthBG < curCloud.words.get(curCloud.words.size()-1).pos.x) ? curCloud.words.get(curCloud.words.size()-1).pos.x : widthBG  ;
+			    		newwidthBG = curCloud.words.get(curCloud.words.size()-1).pos.x;
 			    	}
 			    	widthBG = lerp(widthBG,newwidthBG,0.15f);
 			    	mainOutput.image(timeline,-width/2,-400,width/2 + widthBG,800);
@@ -219,10 +260,36 @@ public class timeline extends PApplet{
 							  mainOutput.popMatrix();
 					  		}
 					 	}
+					
+				  
+					
+					mainOutput.endDraw();
+					wordcloudOutput.beginDraw();
+					wordcloudOutput.image(mainOutput,0,0);
+					if(this.showlogo == true){
+					    	this.logoWZ.drawlogo();
+					    	this.wordcloudOutput.image(logoWZ.logoPlane,0,0);
+					   }
+					wordcloudOutput.endDraw();
+					
+					
+					//draw statusbar
+					wordcloudstatus.beginDraw();
+					wordcloudstatus.clear();
+					int idC = clouds.get(currentCloudid).id -1;
+					gradientShader.set("color1", colorGradients.get(idC).getR1()/255.f,colorGradients.get(idC).getG1()/255.f,colorGradients.get(idC).getB1()/255.f);
+					gradientShader.set("color2", colorGradients.get(idC).getR2()/255.f,colorGradients.get(idC).getG2()/255.f,colorGradients.get(idC).getB2()/255.f);
+					wordcloudstatus.shader(gradientShader);
+					wordcloudstatus.shape(statusGradient);
+					wordcloudstatus.resetShader();
+					//TODO: show current postion
+					wordcloudstatus.textFont(menufont);
+					wordcloudstatus.textSize(40);
+					wordcloudstatus.text(clouds.get(currentCloudid).name, 10, 110);
+					wordcloudstatus.endDraw();
+					image(wordcloudstatus,1920,720,wordcloudstatus.width,wordcloudstatus.height);
+					
 			     	}
-			     	mainOutput.endDraw();
-			    	//draw left screen
-			    	image(mainOutput,1920,0,1920,540);
 		    	}
     		
     		else if (modus == mode.CRISIS) {
@@ -268,29 +335,102 @@ public class timeline extends PApplet{
     		resetShader();
     	}
     	
-    	
-    	if (modus == mode.CRISIS) {
-    		this.events(this.g);
+    	// post draw events
+    	if (modus == mode.CRISIS && init == true && calibration == false) {
+    		//this.events(this.g);
+    		image(eventLine.mainPlane,1920,720,1280,360);
+    		image(eventLine.connLabel.connector,1920,0);
     		eventLine.postdraw();
     	}
+    	
+    	//drawmonitor
+	    if(this.showzoommonitor == true && init == true && calibration == false){
+	    	  PGraphics output = this.wordcloudOutput;
+	    	  if(modus == mode.CRISIS) {
+	    		  output = eventLine.mainPlane;
+	    	  }
+		      pushMatrix();
+		      this.monitorzoom.set("tex", output);
+		      if(this.zoommonitor == 1.){
+		    	  this.monitorzoom.set("mousedrag",map(dragposx,0,3840,0.f,-1.f),map(dragposy,0,1080,-1.f,0.f));
+		      }
+		      this.zoomsmooth = lerp(this.zoomsmooth,this.zoommonitor,0.15f);
+		      if(this.zoomsmooth <= 0.001) this.zoomsmooth = 0;
+		      else if(this.zoomsmooth >= 0.999) this.zoomsmooth = 1.f;
+		      this.monitorzoom.set("zoom",this.zoomsmooth);
+		      //monitorzoom.set("zoom",map(zoomsmooth,0.,1.,0.5,1.));
+		      shader(this.monitorzoom);
+		      shape(this.monitor);
+		      resetShader();
+		      popMatrix();
+		    }
+
+    	if (modus == mode.KEYWORDS) {
+	    	if(frameCount % 60 == 0) {
+	    		this.accessSQL.updateWords();
+	    	}
+    	}
+    	
+    	//Status
     	pushMatrix();
     	translate(1920,0);
     	textSize(13);
     	text("fps: " + frameRate,1720,1020);
+    	if (modus == mode.KEYWORDS) {
+    		text("cloudID: " + currentCloudid,1720,980);
+    	}
     	//surface.setTitle("fps: "+ frameRate + "//" + "wordcount = " + words.size());
     	popMatrix();
     	
-    	if(frameCount % 60 == 0) {
-    		accessSQL.updateWords();
+    }
+    
+    private void loadGradients() {
+    	
+    	JSONArray jsonA = loadJSONArray("./resources/data/colors.json");
+    	for(int i = 0; i < jsonA.size(); i++) {
+    		JSONObject json = jsonA.getJSONObject(i);
+    		
+    		String col1 = json.getString("color1");
+    		String col2 = json.getString("color2");
+    		int fc1 = json.getInt("fontC1");
+    		int fc2 = json.getInt("fontC2");
+    		
+    		int r1 = Integer.valueOf( col1.substring( 1, 3 ), 16 );
+            int g1 = Integer.valueOf( col1.substring( 3, 5 ), 16 );
+            int b1 = Integer.valueOf( col1.substring( 5, 7 ), 16 );
+    		
+            int r2 = Integer.valueOf( col2.substring( 1, 3 ), 16 );
+            int g2 = Integer.valueOf( col2.substring( 3, 5 ), 16 );
+            int b2 = Integer.valueOf( col2.substring( 5, 7 ), 16 );
+   
+    		colorGradient colnew = new colorGradient(r1,r2,g1,g2,b1,b2,fc1,fc2); 
+    		colorGradients.add(colnew);
     	}
     }
    
+    private void createMonitor() {
+		this.monitor = createShape();
+		this.monitor.beginShape(PConstants.QUADS);
+		this.monitor.textureMode(PConstants.NORMAL);
+		this.monitor.vertex(1920,0,0.125f,1);
+		this.monitor.vertex(3840,0,0.875f,1);
+		this.monitor.vertex(3840,720,0.875f,0);
+		this.monitor.vertex(1920,720,0.125f,0);
+		this.monitor.texture(eventLine.mainPlane);
+		this.monitor.endShape();
+
+		this.monitorzoom = loadShader("./resources/shader/monitorzoom2_frag.glsl");
+		this.monitorzoom.set("tex", eventLine.mainPlane);
+		this.monitorzoom.set("zoom",zoommonitor);
+		this.monitorzoom.set("mousedrag",0.f, 0.f);
+    }
+    
     void createTimelineTexture() {
     	  int heightTimelineTexture = 800;
     	  timeline = createImage(1,heightTimelineTexture,RGB);
     	  timeline.loadPixels();
     	  for (int i = 0; i < timeline.pixels.length; i++) {
-    		  float delta = 1f - (0.5f * (cos(((float)i/(float)heightTimelineTexture)*TWO_PI) + 1f));
+    		  float delta = 1.f- (0.5f * (cos(((float)i/(float)heightTimelineTexture)*TWO_PI) + 1.f));
     		  timeline.pixels[i] = color(delta * 120f); 
     	  }
     	  timeline.updatePixels();	
@@ -333,13 +473,17 @@ public class timeline extends PApplet{
     		 	calibrationWin.calframe.setVisible(true);
     	      } 
     	
+    	else if (key == 'g'){
+		 	eventLine.userGui.topPanel.setVisible(true);
+		 	eventLine.userGui.guiframe.setVisible(true);
+	      }    	
      	else if(key == 's') {
      		useshader = !useshader;
      	}
    	
     }
 	 
-    public void zoomIn() {  	
+    public void zoomIn() {
     	//zoom near
     	zPos = 400;
 		showall = false;
@@ -386,7 +530,7 @@ public class timeline extends PApplet{
     	displayKW = createShape();
     	displayKW.beginShape();
     	displayKW.textureMode(NORMAL);
-    	displayKW.texture(mainOutput);
+    	displayKW.texture(wordcloudOutput);
     	displayKW.vertex(0, 0,0,0);
     	displayKW.vertex(3840, 0,1,0);
     	displayKW.vertex(3840, 1080,1,1);
@@ -414,34 +558,19 @@ public class timeline extends PApplet{
     	display2.endShape();   	
     	
     }
-    
-    private void events(PGraphics p) {
-	    //draw timeline on monitor 1
-	    p.image(eventLine.mainPlane,1920,720,1280,360);
-	    
-	    //drawZoom
-	    if(eventLine.showzoommonitor == true){
-	      p.pushMatrix();
-	      eventLine.monitorzoom.set("tex", eventLine.mainPlane);
-	      if(eventLine.zoommonitor == 1.){
-	    	  eventLine.monitorzoom.set("mousedrag",map(dragposx,0,3840,0.f,-1.f),map(dragposy,0,1080,-1.f,0.f));
-	      }
-	      eventLine.zoomsmooth = lerp(eventLine.zoomsmooth,eventLine.zoommonitor,0.15f);
-	      if(eventLine.zoomsmooth <= 0.001) eventLine.zoomsmooth = 0;
-	      else if(eventLine.zoomsmooth >= 0.999) eventLine.zoomsmooth = 1.f;
-	      eventLine.monitorzoom.set("zoom",eventLine.zoomsmooth);
-	      //monitorzoom.set("zoom",map(zoomsmooth,0.,1.,0.5,1.));
-	      p.shader(eventLine.monitorzoom);
-	      p.shape(eventLine.monitor);
-	      p.resetShader();
-	      p.popMatrix();
-	    }
-	  
-	   p.image(eventLine.connLabel.connector,1920,0);
+     
+    private void createStatusGradient() {
+    	statusGradient = createShape();
+    	statusGradient.beginShape();
+    	statusGradient.textureMode(NORMAL);
+    	statusGradient.noStroke();
+    	statusGradient.vertex(0,0,0,0);
+    	statusGradient.vertex(1920,0,1,0);
+    	statusGradient.vertex(1920,60,1,1);
+    	statusGradient.vertex(0,60,0,1);
+    	statusGradient.endShape();
     	
     }
-   
-
     public void mousePressed(){
     	if (modus == mode.CRISIS) {
 		      if((mouseX <= 1920+1280 && mouseX >=1920) && (mouseY >= 720) && mouseButton == LEFT){
@@ -476,5 +605,15 @@ public class timeline extends PApplet{
       }
     }
     }
+    
+    private void loadWorkshopInfos() {
+		workshops = new ArrayList<workshopinfo>();
+		JSONArray jsonA = loadJSONArray("./resources/data/workshops.json");
+		for(int i = 0; i < jsonA.size(); i++) {
+			JSONObject json = jsonA.getJSONObject(i);
+			workshopinfo newWs = new workshopinfo(json.getInt("value"),json.getString("name"));
+			workshops.add(newWs);
+		}
+	}
     
 }

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
+import javax.swing.plaf.synth.SynthSpinnerUI;
+
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PShape;
@@ -18,6 +20,7 @@ import processing.data.JSONObject;
 public class wordcloud {
 	
 	int id;
+	String name;
 	
 	int wordcount;
 	float minY;
@@ -27,8 +30,8 @@ public class wordcloud {
 	int starttime;
 	int endtime;
 	
-	int r1, r2, g1, g2, b1,b2;
-	int fc;
+	private int r1, r2, g1, g2, b1, b2;
+	private int fc1,fc2;
 	
 	List<wordObject> words;
 	List<knotObject> knots;
@@ -44,7 +47,8 @@ public class wordcloud {
 		
 	public wordcloud(PApplet parent,int id) {
 		this.parent = parent;
-		setColorGrad();
+		this.id = id;
+		this.setColorGrad();
 		words = new ArrayList<wordObject>();
 	    knots = new ArrayList<knotObject>();
 	    colors = new ArrayList<Integer>();
@@ -53,28 +57,28 @@ public class wordcloud {
 	    allCircles = parent.createShape(PConstants.GROUP);
 		wordCloud = parent.createShape();
 		connections = parent.createShape(PConstants.GROUP);
-	    this.id = id;
-	    //System.out.println("new cloud: " + this.id);
-
+	    this.name = timeline.workshops.get(id-1).getName();
 	}
 	
 	private void setColorGrad() {
-		JSONArray jsonA = parent.loadJSONArray("./resources/data/colors.json");
-		JSONObject json = jsonA.getJSONObject(0);
-		this.r1 = json.getInt("redS");
-		this.r2 = json.getInt("greenS");
-		this.g1 = json.getInt("blueS");
-		this.g2 = json.getInt("redE");
-		this.b1 = json.getInt("greenE");
-		this.b2 = json.getInt("blueE");
-		this.fc = json.getInt("fontC");
+		this.r1 = timeline.colorGradients.get(this.id-1).getR1();
+		this.r2 = timeline.colorGradients.get(this.id-1).getR2();
+		this.g1 = timeline.colorGradients.get(this.id-1).getG1();
+		this.g2 = timeline.colorGradients.get(this.id-1).getG2();
+		this.b1 = timeline.colorGradients.get(this.id-1).getB1();
+		this.b2 = timeline.colorGradients.get(this.id-1).getB2();
+		this.fc1 = timeline.colorGradients.get(this.id-1).getFc1();
+		this.fc2 = timeline.colorGradients.get(this.id-1).getFc2();
+		
 	}
 	
-	public int getColor(float time) {
+	
+	
+	private int getColor(float time) {
 		int col;
-		int R = (int)(r1 * time + r2 * (1 - time));
-		int G = (int)(g1 * time + g2 * (1 - time));
-		int B = (int)(b1 * time + b2 * (1 - time));
+		int R = (int)(this.r1 * time + this.r2 * (1 - time));
+		int G = (int)(this.g1 * time + this.g2 * (1 - time));
+		int B = (int)(this.b1 * time + this.b2 * (1 - time));
 		col = parent.color(R,G,B);
 		return col;
 	}
@@ -128,6 +132,7 @@ public class wordcloud {
 		//focus to new object
 		timeline.wordFocus = this.words.size()-1;
 		timeline.currentCloudid = timeline.clouds.indexOf(this);
+		
 	}
 	
 	private void createWord(boolean fx, String text, int knotid) {
@@ -144,6 +149,14 @@ public class wordcloud {
 		wordObject new1 = new wordObject(text,pos,knotid,fxVal,this);
 		this.words.add(new1);
 		this.lastposX += deltaX;
+	}
+	
+	public int getId() {
+		return this.id;
+	}
+	
+	public String getWsName() {
+		return this.name;
 	}
 
 }

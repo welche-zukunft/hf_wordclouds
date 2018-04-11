@@ -1,8 +1,10 @@
 package welchezukunft;
 
 import java.awt.Color;
+import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
@@ -29,12 +32,16 @@ public class mainGui {
 	eventTimeline parent;
 	
 	JFrame guiframe;
-	JPanel mainPanelGui;
+	JPanel topPanel,topPanel2;
+	JPanel mainPanelGui,mainPanelGui2,switchModePanel;
 	JPanel changeStatus;
 	JButton GUIbutton,newButton,pendingButton,pausedButton;
 	
 	DefaultListModel yearmodel, wsmodel,modemodel, eventmodelPlaced,eventmodelNew,eventmodelPending,eventmodelDeleted;
 	JList yearList, wsList,modeList, eventsListPlaced,eventsListNew,eventsListPending,eventsListDeleted;
+	
+	DefaultListModel keywordModel;
+	JList keywordList;
 	
 	String[] GUIyears = {"alles","2007", "2008", "2009", "2010", "2011","2012"};
 	String[] GUIworkshops  = {"alle","Pavlina Tcherneva","Harald Schumann","Cho Khong(UK)","Jürg Müller(Switzerland)","Eyvandur Gunnarsson (Iceland)","Evan Liaras (Greece)","José Soeiro(Portugal)","Isabel Feichtner (European law)","Kai von Lewinski (German Law)","Otto Steinmetz (Banks)","Cornelia Dahaim (global workforce)","Joseph Vogl (eternal critic)","Ariella Helfgott","Ulrike Hermann (Moderation)","Volker Heise (Moderation)"};
@@ -81,6 +88,21 @@ public class mainGui {
 		    }
 		  });
 	}
+	
+	public void updateGUIKeywords() {
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+		    	keywordModel.clear();
+		    	int position = 0;
+		    	for(wordcloud wc : timeline.clouds){
+				    String elem = Integer.toString(position) + "/ WS:" + Integer.toString(wc.getId()) + " / " + wc.getWsName();  
+				    keywordModel.addElement(elem);   
+				    position++;
+		    	}
+		    	 keywordList.setModel(keywordModel); 
+		    }
+		});
+	}
 
 	public void setMode(int moder){
 	  if(moder == 0){
@@ -103,16 +125,37 @@ public class mainGui {
 
 void createMainGui(){
 	this.guiframe = new JFrame("Welche Zukunft?! - GUI");
-	this.guiframe.setBounds(10, 10, 1700, 700);
+	this.guiframe.setBounds(10, 10, 1610, 810);
 	this.guiframe.setAlwaysOnTop( true );
-    Dimension d = new Dimension(1600,600);
+	
+    Dimension d = new Dimension(1600,800);
     Container con = this.guiframe.getContentPane();
     con.setPreferredSize(d);
     this.mainPanelGui = new JPanel();
     this.mainPanelGui.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-    this. mainPanelGui.setLayout(new GridLayout(1,7));
-    this.mainPanelGui.setPreferredSize(new Dimension(1600,600));
+    this.mainPanelGui.setLayout(new GridLayout(1,7));
+    this.mainPanelGui.setPreferredSize(new Dimension(1600,700));
  
+    this.mainPanelGui2 = new JPanel();
+    this.mainPanelGui2.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    this.mainPanelGui2.setLayout(new GridLayout(1,0));
+    this.mainPanelGui2.setPreferredSize(new Dimension(1600,700));
+   
+    this.switchModePanel = new JPanel();
+    this.switchModePanel.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    this.switchModePanel.setPreferredSize(new Dimension(1600,100));
+     
+    this.topPanel = new JPanel();
+    this.topPanel.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    //this.topPanel.setLayout(new GridLayout(3,0));
+    this.topPanel.setPreferredSize(new Dimension(1600,800)); 
+    
+    this.topPanel2 = new JPanel();
+    this.topPanel2.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    //this.topPanel2.setLayout(new GridLayout(3,0));
+    this.topPanel2.setPreferredSize(new Dimension(1600,800));     
+    
+    //top Panel for Events
     // select a mode
    JPanel modepanel = new JPanel();
    modepanel.setLayout(new GridLayout(2,1));
@@ -145,6 +188,8 @@ void createMainGui(){
    mainPanelGui.add(modepanel);
  
  
+   
+   
  
  
    // select a year to focus
@@ -326,18 +371,7 @@ void createMainGui(){
   //Button ScreenSaver
   JPanel buttonpanel = new JPanel();
   buttonpanel.setLayout(new GridLayout(4,1));
-  JButton ScreenSaverButton = new JButton("Screensaver");
   
-  ScreenSaverButton.addActionListener(new ActionListener()
-    {
-      public void actionPerformed(ActionEvent e)
-      {
-        if(parent.showlogo == false) parent.showlogo = true;
-        if(parent.logoWZ.animatelogo == false) parent.logoWZ.animatelogo = true;
-      }
-    });
-  
-  buttonpanel.add(ScreenSaverButton);
   
   // Checkbox Zoom
   
@@ -367,22 +401,7 @@ void createMainGui(){
        }
     });
     
-  buttonpanel.add(check2);  
-  
-  
-   //Button CLOSE
-  GUIbutton = new JButton("CLOSE");
-  buttonpanel.add(GUIbutton);  
-  
-  GUIbutton.addActionListener(new ActionListener()
-    {
-      public void actionPerformed(ActionEvent e)
-      {
-        guiframe.setVisible(false);
-        guiframe.dispose();
-      }
-    });  
-    
+   buttonpanel.add(check2);      
    extrapanel.add(buttonpanel);
    
    // Status Changer
@@ -417,12 +436,8 @@ void createMainGui(){
         String content = changeEvent.getText();
         String [] number = content.split("/",0);
         if(number[0] != "select event to change"){
-        parent.eventList.get(Integer.parseInt(number[0])-1).setStatus(Eventstatus.PENDING);
-        
-        database.
-        timestampMsql.query("UPDATE Event SET timestamp=%s WHERE vertex_id=%s", System.currentTimeMillis(), number[0]); 
-        
-        
+        parent.eventList.get(Integer.parseInt(number[0])-1).setStatus(Eventstatus.PENDING);   
+        database.eventsTimestampMsql.query("UPDATE Event SET timestamp=%s WHERE vertex_id=%s", System.currentTimeMillis(), number[0]); 
         changeEvent.setText("select event to change"); 
         changeEvent.setForeground(Color.RED);
         updateGUI();
@@ -453,9 +468,112 @@ void createMainGui(){
    
    extrapanel.add(changeStatus);
    mainPanelGui.add(extrapanel);
-   guiframe.add(mainPanelGui);
+   
+   //change Mode Panel
+   FlowLayout experimentLayout = new FlowLayout();
+   switchModePanel.setLayout(experimentLayout);
+   switchModePanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+   
+   JButton switchMode = new JButton("Switch to Events");
+   switchMode.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.modus = mode.CRISIS;
+    	   topPanel2.remove(switchModePanel);
+    	   topPanel.add(switchModePanel);
+    	   guiframe.setContentPane(topPanel);
+    	   guiframe.validate();
+       }
+     });
+   
+   switchModePanel.add(switchMode);
+
+   JButton switchMode2 = new JButton("Switch to Wordcloud");
+   switchMode2.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.modus = mode.KEYWORDS;
+    	   topPanel.remove(switchModePanel);
+    	   topPanel2.add(switchModePanel);
+    	   guiframe.setContentPane(topPanel2);
+    	   guiframe.validate();
+    	   
+       }
+     });
+   switchModePanel.add(switchMode2);
+
+   //Screensaverbutton
+   JButton ScreenSaverButton = new JButton("Screensaver");
+   ScreenSaverButton.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+         if(timeline.showlogo == false) timeline.showlogo = true;
+         if(timeline.logoWZ.animatelogo == false) timeline.logoWZ.animatelogo = true;
+       }
+     });
+   switchModePanel.add(ScreenSaverButton);
+
+   //Button CLOSE
+   GUIbutton = new JButton("CLOSE");
+   switchModePanel.add(GUIbutton);  
+  
+   GUIbutton.addActionListener(new ActionListener()
+    {
+      public void actionPerformed(ActionEvent e)
+      {
+        guiframe.setVisible(false);
+        guiframe.dispose();
+      }
+    });  
+   
+   
+   
+
+   //bottom Panel for Keyowrds
+   // select a wordcloud
+   
+   JPanel wordcloudpanel = new JPanel();
+   wordcloudpanel.setLayout(experimentLayout);
+   wordcloudpanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+   JLabel wordcloudHL = new JLabel("select wordcloud to show",SwingConstants.CENTER);
+   wordcloudpanel.add(wordcloudHL);
+  
+   keywordModel = new DefaultListModel();
+   for(String mode : GUImode){
+ 	  keywordModel.addElement(mode);
+   }
+   keywordList = new JList(keywordModel);
+   //keywordList.setSelectedIndex(0);
+   keywordList.addMouseListener(new MouseAdapter() {
+        public void mouseClicked(java.awt.event.MouseEvent e) {
+           Integer selectedItem = keywordList.getSelectedIndex();
+           timeline.currentCloudid = selectedItem;
+       }
+   });
+   JScrollPane keywordPane = new JScrollPane();
+   keywordPane.setViewportView(keywordList);
+   keywordList.setLayoutOrientation(JList.VERTICAL);
+   wordcloudpanel.add(keywordPane);
+   wordcloudpanel.setBackground(new Color(0.8f,0.8f,0.8f));
+   mainPanelGui2.add(wordcloudpanel);
+   
+   
+   topPanel.add(mainPanelGui);
+   topPanel.add(new JSeparator());
+   topPanel.add(switchModePanel);
+   
+   topPanel2.add(mainPanelGui2);
+   topPanel2.add(new JSeparator());
+   //topPanel2.add(switchModePanel);
+  
+   
+   guiframe.setContentPane(topPanel);
+   
    guiframe.pack(); 
-   guiframe.setVisible(true);   
+   guiframe.setVisible(false);   
 
 	}
 

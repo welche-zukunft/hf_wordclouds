@@ -8,8 +8,7 @@ import processing.core.PVector;
 
 public class eventTimelineMenu {
 	
-	String [] workshopTitle = {"Ökonomie: Fiskalische und andere Götterdämmerungen","Ökonomie: Patient Zero - der Indexpatient Deutsche Bank","Ökonomie: Armageddon","Ökonomie: Der Weg zur Hölle ist mit guten Vorsätzen gepflastert","Recht und Gesetz: Staatsverluste?!","Risikomanagement: Guter Rat – Notvorrat …","Energy transitions","Wetter: Eine neue Normalität","Geopolitics: Intersections","Arbeit: Zukunft ohne Arbeitgeber?","Identitäten: Heiße Luft","Elite & Demokratie: Rolle rückwärts","Agriculture: Coffee shortage and other inconveniences","Plenum Voices"};
-
+	String [] workshopTitle = {"Pavlina Tcherneva","Harald Schumann","Cho Khong(UK)","Jürg Müller(Switzerland)","Eyvandur Gunnarsson (Iceland)","Evan Liaras (Greece)","José Soeiro(Portugal)","Isabel Feichtner (European law)","Kai von Lewinski (German Law)","Otto Steinmetz (Banks)","Cornelia Dahaim (global workforce)","Joseph Vogl (eternal critic)","Ariella Helfgott","Ulrike Hermann (Moderation)","Volker Heise (Moderation)"};
 	boolean menu = false;
 	boolean eventmenu = false;
 	int menuposx,menuposy = 0;
@@ -361,7 +360,19 @@ public class eventTimelineMenu {
 	    	   this.subText.rotate((float)Math.toRadians(-90));
 	        Event current = this.parent.eventList.get(basketids[i]-1);
 	        this.subText.stroke(0);
-	        this.subText.text(current.getHeadline(),(this.basketbuttonSizeX*-1)+2,(this.basketbuttonSizeY*-1.f)+1,this.basketbuttonSizeX*2,this.basketbuttonSizeY+5);
+	        String dateString = "";
+	        if(current.getDay() != 0) {
+	        	dateString += Integer.toString(current.getDay()) + ".";
+	        }
+	        if(!current.getMonth().equals("0")) {
+	        	dateString += current.getMonth().substring(0, 3) + ".";
+	        }
+	        if(current.getYear() != 0) {
+	        	int yearnum = (current.getYear()-2000);
+	        	dateString += String.format("%02d", yearnum) + " / ";
+	        }
+	        
+	        this.subText.text(dateString + current.getHeadline(),(this.basketbuttonSizeX*-1)+2,(this.basketbuttonSizeY*-1.f)+1,this.basketbuttonSizeX*2,this.basketbuttonSizeY+5);
 	        this.subText.popMatrix();
 	       }  
 	       this.subText.endDraw();

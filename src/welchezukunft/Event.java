@@ -19,8 +19,11 @@ public class Event {
   private Eventstatus status;
   private eventTimeline parent;
   private requestSQL database;
+  private int year;
+  private String month;
+  private int day;
   
-  public Event(int id, String content, String imagePath, String headline, float xPos, float yPos,int workshop_id, String status){
+  public Event(int id, String content, String imagePath, String headline, float xPos, float yPos,int workshop_id, String status,int day,String month,int year){
     this.id = id;
     this.headline = headline;
     this.content = content;
@@ -29,6 +32,9 @@ public class Event {
     this.yPos = yPos;
     this.setWorkshop_id(workshop_id);
     this.parent = timeline.eventLine;
+    this.year = year;
+    this.month = month;
+    this.day = day;
     
     database = timeline.accessSQL;
    
@@ -107,6 +113,30 @@ public class Event {
   
   public Eventstatus getStatus(){
     return this.status;
+  }
+  
+  public void setDay(int day) {
+	  this.day = day;
+  }
+  
+  public void setMonth(String month) {
+	  this.month = month;
+  } 
+  
+  public int getYear() {
+	  return this.year;
+  } 
+  
+  public int getDay() {
+	  return this.day;
+  }
+  
+  public String getMonth() {
+	  return this.month;
+  } 
+  
+  public void setYear(int year) {
+	  this.year = year;
   }
   
   private void createNewBadge(){
