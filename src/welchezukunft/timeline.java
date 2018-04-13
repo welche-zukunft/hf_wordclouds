@@ -41,6 +41,7 @@ public class timeline extends PApplet{
 	PShape displayKW, displayCR, display2;
 	PShape statusGradient;
 	PShape monitor;
+	PShape triangle;
 	
 	public static float zoommonitor = 0;
 	public static boolean showzoommonitor = true;
@@ -126,6 +127,7 @@ public class timeline extends PApplet{
 		createMonitor();
 		createStatusGradient();
 		loadGradients();
+		createTriangle();
 		
 		//load data from sql
 		accessSQL.getWordsSetup();
@@ -235,7 +237,7 @@ public class timeline extends PApplet{
 							if(w.init > 0.) {
 								mainOutput.pushMatrix();			
 								mainOutput.translate(w.pos.x,w.pos.y,0);
-								float scaleF = (float)1.+ 4f*(1.f - w.init);
+								float scaleF = (float)1.+ 0.2f*(1.f - w.init);
 								mainOutput.scale(scaleF);
 								mainOutput.fill(255,255*(w.init));
 								mainOutput.textAlign(CENTER, CENTER);
@@ -283,6 +285,11 @@ public class timeline extends PApplet{
 					wordcloudstatus.shape(statusGradient);
 					wordcloudstatus.resetShader();
 					//TODO: show current postion
+					//float pos = (float)clouds.get(currentCloudid).words.get(wordFocus).pos.x / (float)clouds.get(currentCloudid).sizex;
+					//wordcloudstatus.pushMatrix();
+					//wordcloudstatus.translate(pos * wordcloudstatus.width, 60);
+					//wordcloudstatus.shape(triangle);
+					//wordcloudstatus.popMatrix();
 					wordcloudstatus.textFont(menufont);
 					wordcloudstatus.textSize(40);
 					wordcloudstatus.text(clouds.get(currentCloudid).name, 10, 110);
@@ -425,6 +432,50 @@ public class timeline extends PApplet{
 		this.monitorzoom.set("mousedrag",0.f, 0.f);
     }
     
+    private void createDisplay() {
+    	displayKW = createShape();
+    	displayKW.beginShape();
+    	displayKW.textureMode(NORMAL);
+    	displayKW.texture(wordcloudOutput);
+    	displayKW.vertex(0, 0,0,0);
+    	displayKW.vertex(3840, 0,1,0);
+    	displayKW.vertex(3840, 1080,1,1);
+    	displayKW.vertex(0, 1080,0,1);
+    	displayKW.endShape();
+ 
+       	displayCR = createShape();
+    	displayCR.beginShape();
+    	displayCR.textureMode(NORMAL);
+    	displayCR.texture(eventLine.mainPlane);
+    	displayCR.vertex(0, 0,0,0);
+    	displayCR.vertex(3840, 0,1,0);
+    	displayCR.vertex(3840, 1080,1,1);
+    	displayCR.vertex(0, 1080,0,1);
+    	displayCR.endShape();    	
+    	
+       	display2 = createShape();
+    	display2.beginShape();
+    	display2.textureMode(NORMAL);
+    	display2.texture(caliOutput);
+    	display2.vertex(0, 0,0,0);
+    	display2.vertex(3840, 0,1,0);
+    	display2.vertex(3840, 1080,1,1);
+    	display2.vertex(0, 1080,0,1);
+    	display2.endShape();   	
+    	
+    }
+    
+    public void createTriangle() {
+    	triangle = createShape();
+    	triangle.beginShape();
+    	triangle.noStroke();
+    	triangle.fill(255,190);
+    	triangle.vertex(0, 0);
+    	triangle.vertex(20, -40);
+    	triangle.vertex(-20, -40);
+    	triangle.endShape();
+    }
+    
     void createTimelineTexture() {
     	  int heightTimelineTexture = 800;
     	  timeline = createImage(1,heightTimelineTexture,RGB);
@@ -493,17 +544,22 @@ public class timeline extends PApplet{
 	    //show all
 		if(curCloud.words.size() > 1) {
 			showall = true;
+			
 			float xStart = curCloud.words.get(0).pos.x;
 			float xEnd = curCloud.words.get(curCloud.words.size()-1).pos.x;
+			
+			System.out.println(xStart + "/ " + xEnd);
+			
 			float yStart = abs(curCloud.minY);
 			float yEnd = curCloud.maxY;	
 	
 			float radAngle = radians(fovy);
-			float radHFOV = 2 * atan(tan(radAngle / 2) * aspect);
+			float radHFOV = 2 * atan(tan(radAngle / 2) * this.aspect);
 			float fovx = degrees(radHFOV);
 			
 			float distancex = 1/(2f * tan((fovx/2)/(xEnd-xStart)));
 			float distancey = 1/(2f * tan((fovy/2)/(curCloud.maxY*1.05f-curCloud.minY*1.05f)));
+			
 			zPos = Math.max(distancex, distancey);
 		}
     }
@@ -526,38 +582,7 @@ public class timeline extends PApplet{
         return times;
     }
     
-    private void createDisplay() {
-    	displayKW = createShape();
-    	displayKW.beginShape();
-    	displayKW.textureMode(NORMAL);
-    	displayKW.texture(wordcloudOutput);
-    	displayKW.vertex(0, 0,0,0);
-    	displayKW.vertex(3840, 0,1,0);
-    	displayKW.vertex(3840, 1080,1,1);
-    	displayKW.vertex(0, 1080,0,1);
-    	displayKW.endShape();
- 
-       	displayCR = createShape();
-    	displayCR.beginShape();
-    	displayCR.textureMode(NORMAL);
-    	displayCR.texture(eventLine.mainPlane);
-    	displayCR.vertex(0, 0,0,0);
-    	displayCR.vertex(3840, 0,1,0);
-    	displayCR.vertex(3840, 1080,1,1);
-    	displayCR.vertex(0, 1080,0,1);
-    	displayCR.endShape();    	
-    	
-       	display2 = createShape();
-    	display2.beginShape();
-    	display2.textureMode(NORMAL);
-    	display2.texture(caliOutput);
-    	display2.vertex(0, 0,0,0);
-    	display2.vertex(3840, 0,1,0);
-    	display2.vertex(3840, 1080,1,1);
-    	display2.vertex(0, 1080,0,1);
-    	display2.endShape();   	
-    	
-    }
+    
      
     private void createStatusGradient() {
     	statusGradient = createShape();

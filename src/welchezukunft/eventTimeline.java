@@ -100,9 +100,6 @@ public class eventTimeline {
 	float HLcurrentTextSize = 0.f;
 	
 	public eventTimeline(int width, int height, PApplet parent){
-		
-		
-		
 		this.parent = parent;
 		this.database = timeline.accessSQL;
 		imgwidth = width;
@@ -123,7 +120,6 @@ public class eventTimeline {
 		this.menu = new eventTimelineMenu(this);
 		this.connLabel = new connectionLabel(this);
 		this.userGui = new mainGui(this);
-		
 		
 		 
 		//Main Content

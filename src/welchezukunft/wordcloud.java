@@ -38,6 +38,8 @@ public class wordcloud {
 	List<Integer> colors;
 	List<Integer> wordCount;
 	
+	public int sizex = 10000;
+	
 	PVector lastObjectPosition = new PVector(0,0,0);
 
 	PShape wordCloud; 
@@ -61,6 +63,7 @@ public class wordcloud {
 	}
 	
 	private void setColorGrad() {
+		System.out.println(this.id);
 		this.r1 = timeline.colorGradients.get(this.id-1).getR1();
 		this.r2 = timeline.colorGradients.get(this.id-1).getR2();
 		this.g1 = timeline.colorGradients.get(this.id-1).getG1();
@@ -107,7 +110,7 @@ public class wordcloud {
 			this.colors.add(color);
 			knotid = this.knots.size();
 			//create word
-			createWord(fx,text,knotid);
+			createWord(fx,text,time,knotid);
 			//generate new knotObject at position
 			int [] dir = {-1,1};
 			float posy = parent.random((float)-1600.,(float)-1000.) * dir[(int)parent.random(2)];
@@ -121,7 +124,7 @@ public class wordcloud {
 		else if(currentKnot.isPresent() == true) {
 			knotid = currentKnot.get().id;
 			//create word
-			createWord(fx,text,knotid);
+			createWord(fx,text,time,knotid);
 			//repos & recalc connection
 			currentKnot.get().changeposition(this.lastposX);
 			float newposy = currentKnot.get().position.y;
@@ -135,20 +138,20 @@ public class wordcloud {
 		
 	}
 	
-	private void createWord(boolean fx, String text, int knotid) {
+	private void createWord(boolean fx, String text, int time, int knotid) {
 		//create new badge
-		float deltaX = parent.random((float)50.,(float)190.);
+		float movex = ((float)(time - this.starttime) / (float)(timeline.speaktime*60))*this.sizex;
 		float deltaY = parent.random((float)-400.,(float)400.);
-		PVector pos = new PVector(this.lastposX + deltaX,(float)deltaY,(float)0.);
+		PVector pos = new PVector(movex,(float)deltaY,(float)0.);
 		this.minY = (deltaY <= this.minY) ? deltaY : this.minY;
 		this.maxY = (deltaY >= this.maxY) ? deltaY : this.maxY;
 		float fxVal = 1.0f;
 		if(fx == false) {
 			fxVal = 0.0f;
 		}
-		wordObject new1 = new wordObject(text,pos,knotid,fxVal,this);
+		wordObject new1 = new wordObject(text,pos,knotid,fxVal,time,this);
 		this.words.add(new1);
-		this.lastposX += deltaX;
+		this.lastposX = movex;
 	}
 	
 	public int getId() {

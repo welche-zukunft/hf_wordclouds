@@ -62,13 +62,13 @@ public class requestSQL {
 			String word = msql.getString(3);
 			int sentence_id = msql.getInt(4);
 			int seconds = 0;
+			int cloudId = 1;
 			
-			int cloudId = 0;
 			
 			timestampMsql.query("SELECT * FROM sentence WHERE id ='"+ sentence_id + "'");
 				while(timestampMsql.next()){
 					Time time = timestampMsql.getTime(4);
-					seconds = time.getSeconds();
+					seconds = time.getSeconds() + time.getMinutes()*60 + time.getHours() * 3600;
 					cloudId = timestampMsql.getInt(5);
 				}
 				
@@ -81,6 +81,7 @@ public class requestSQL {
 			if(wcExists == false) {
 				wordcloud newcloud = new wordcloud(parent,cloudID2);
 				newcloud.id = cloudID2;
+				System.out.println(newcloud.id);
 				newcloud.createBadge(word, seconds,false);
 				timeline.clouds.add(newcloud);
 				timeline.currentCloudid = timeline.clouds.size()-1;
@@ -94,7 +95,7 @@ public class requestSQL {
 			
 		}
 		timeline.eventLine.userGui.updateGUIKeywords();
-		
+		System.out.println(timeline.clouds.size());
 	}
 	
 		
@@ -122,7 +123,7 @@ public class requestSQL {
 			timestampMsql.query("SELECT * FROM sentence WHERE id ='"+ sentence_id + "'");
 				while(timestampMsql.next()){
 					Time time = timestampMsql.getTime(4);
-					seconds = time.getSeconds();
+					seconds = time.getSeconds() + time.getMinutes()*60 + time.getHours() * 3600;
 					keywordCount = timestampMsql.getInt(3);
 					cloudId = timestampMsql.getInt(5);
 				}
