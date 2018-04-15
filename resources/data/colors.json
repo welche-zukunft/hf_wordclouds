@@ -2,79 +2,79 @@
 	{
 		"color1":"#e1eec3",
 		"color2":"#f05053",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":50
 	},
 	{
 		"color1":"#22c1c3",
 		"color2":"#fdbb2d",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":40
 	},
 	{
 		"color1":"#43c6ac",
 		"color2":"#191654",
-		"fontC1":200,
-		"fontC2":255
+		"fontC1":0,
+		"fontC2":40
 	},
 	{
 		"color1":"#e1eec3",
 		"color2":"#f05053",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":40
 	},
 	{
 		"color1":"#22c1c3",
 		"color2":"#fdbb2d",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#43c6ac",
 		"color2":"#191654",
-		"fontC1":200,
-		"fontC2":255
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#e1eec3",
 		"color2":"#f05053",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#22c1c3",
 		"color2":"#fdbb2d",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#43c6ac",
 		"color2":"#191654",
-		"fontC1":200,
-		"fontC2":255
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#43c6ac",
 		"color2":"#191654",
-		"fontC1":200,
-		"fontC2":255
+		"fontC1":0,
+		"fontC2":40
 	},
 	{
 		"color1":"#22c1c3",
 		"color2":"#fdbb2d",
-		"fontC1":255,
-		"fontC2":200
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#43c6ac",
 		"color2":"#191654",
-		"fontC1":200,
-		"fontC2":255
+		"fontC1":0,
+		"fontC2":20
 	},
 	{
 		"color1":"#43c6ac",
 		"color2":"#191654",
-		"fontC1":200,
-		"fontC2":255
+		"fontC1":0,
+		"fontC2":20
 	}
 ]

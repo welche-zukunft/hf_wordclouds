@@ -33,10 +33,12 @@ public class wordcloud {
 	private int r1, r2, g1, g2, b1, b2;
 	private int fc1,fc2;
 	
+	boolean finished = false;
+	
 	List<wordObject> words;
 	List<knotObject> knots;
 	List<Integer> colors;
-	List<Integer> wordCount;
+	List<sentence> wordCountperSentence;
 	
 	public int sizex = 10000;
 	
@@ -54,7 +56,7 @@ public class wordcloud {
 		words = new ArrayList<wordObject>();
 	    knots = new ArrayList<knotObject>();
 	    colors = new ArrayList<Integer>();
-	    wordCount = new ArrayList<Integer>();
+	    wordCountperSentence = new ArrayList<sentence>();
 	    
 	    allCircles = parent.createShape(PConstants.GROUP);
 		wordCloud = parent.createShape();
@@ -86,10 +88,28 @@ public class wordcloud {
 		return col;
 	}
 	
-	public void createBadge(String text, int time, boolean fx) {
+	public void createBadge(String text, int time,int sentenceId, boolean fx) {
 		boolean newWord = false;
+		boolean overtime = false;
 		int knotid = 0;
 		
+		//add count to wordcount per sentence
+		//check if sentence is existing
+		Optional<sentence> currentSentence = this.wordCountperSentence.stream()
+		        .filter(sentence -> sentence.getSentence_id() == sentenceId)
+		        .findFirst();
+		//if existing add count
+		if(currentSentence.isPresent()) {
+			currentSentence.get().addCount();
+		}
+		//otherwise add sentence
+		else {
+			sentence newsentence = new sentence(sentenceId);
+			wordCountperSentence.add(newsentence);
+		}
+		
+		int countinsentence = wordCountperSentence.stream().filter(sentence -> sentence.getSentence_id() == sentenceId).findFirst().get().getCount();
+
 		//if first word set starttime
 		if(this.words.size() == 0) {
 			this.starttime = time;
@@ -100,17 +120,23 @@ public class wordcloud {
 		        .filter(knotObject -> knotObject.word.equalsIgnoreCase(text))
 		        .findFirst();
 	
+		
 		// new word = new knot	
 		if(currentKnot.isPresent() == false) {
 			newWord = true;
 			//running time in seconds
 			float seconds = time - this.starttime;
 			float tposition = (float)seconds/(float)(timeline.speaktime*60); 
+			if(tposition > 1.f) {
+				overtime = true;
+				tposition = 1.f;
+			}
 			int color = this.getColor(tposition);
 			this.colors.add(color);
 			knotid = this.knots.size();
+
 			//create word
-			createWord(fx,text,time,knotid);
+			createWord(fx,text,time,knotid,countinsentence,overtime);
 			//generate new knotObject at position
 			int [] dir = {-1,1};
 			float posy = parent.random((float)-1600.,(float)-1000.) * dir[(int)parent.random(2)];
@@ -123,8 +149,13 @@ public class wordcloud {
 		// used word = no new knot
 		else if(currentKnot.isPresent() == true) {
 			knotid = currentKnot.get().id;
+			float seconds = time - this.starttime;
+			float tposition = (float)seconds/(float)(timeline.speaktime*60); 
+			if(tposition > 1.f) {
+				overtime = true;
+			}
 			//create word
-			createWord(fx,text,time,knotid);
+			createWord(fx,text,time,knotid,countinsentence,overtime);
 			//repos & recalc connection
 			currentKnot.get().changeposition(this.lastposX);
 			float newposy = currentKnot.get().position.y;
@@ -138,10 +169,10 @@ public class wordcloud {
 		
 	}
 	
-	private void createWord(boolean fx, String text, int time, int knotid) {
+	private void createWord(boolean fx, String text, int time, int knotid, int countinsentence,boolean overtime) {
 		//create new badge
 		float movex = ((float)(time - this.starttime) / (float)(timeline.speaktime*60))*this.sizex;
-		float deltaY = parent.random((float)-400.,(float)400.);
+		float deltaY = (countinsentence -1) * (timeline.badgeSizeY * 1.2f);
 		PVector pos = new PVector(movex,(float)deltaY,(float)0.);
 		this.minY = (deltaY <= this.minY) ? deltaY : this.minY;
 		this.maxY = (deltaY >= this.maxY) ? deltaY : this.maxY;
@@ -149,7 +180,7 @@ public class wordcloud {
 		if(fx == false) {
 			fxVal = 0.0f;
 		}
-		wordObject new1 = new wordObject(text,pos,knotid,fxVal,time,this);
+		wordObject new1 = new wordObject(text,pos,knotid,fxVal,time,overtime,this);
 		this.words.add(new1);
 		this.lastposX = movex;
 	}

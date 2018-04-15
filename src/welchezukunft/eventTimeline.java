@@ -304,7 +304,6 @@ public class eventTimeline {
 		       this.contentPlane.textAlign(PConstants.LEFT,PConstants.TOP);
 		       if(event.getYPos() <= 0.) widthtoborder = (float) Math.abs((-1. * this.upperLeftWorld.y) - (event.getYPos()*this.upperLeftWorld.y));
 		       int lines = (int) (Math.ceil((float)(Math.ceil(HLsize)) / widthtoborder) + 1);
-		       
 		       this.contentPlane.pushMatrix();
 		       if(v.y < 0){
 			       this.contentPlane.translate(v.x+(this.size * 3.f)-((lines*HLheight)*0.5f),(v.y - (this.size/2.f)),z);
@@ -316,7 +315,6 @@ public class eventTimeline {
 		       }     
 
 		       this.contentPlane.text(HLtext,0,0,widthtoborder,lines*HLheight);
-		     //contentPlane.text(HLtext,0,0,200+((newcameraPosZ-minzoom)/(maxzoom-minzoom))*400,150);
 		     this.contentPlane.popMatrix();
 		      }
 		      //horizontal Text
@@ -341,8 +339,8 @@ public class eventTimeline {
 		     int ContentLines = 0;
 		     float contentheight = 0.f;
 		     //draw content text additional if zoom is near; only non-deleted objects
-		     if(this.state == 0 && this.eventList.indexOf(event) == this.moving){//event.getStatus() != Status.DELETED){
-		    	 this.contentPlane.textSize(7.f + influencecamfont);
+		     if(this.state == 0 && this.eventList.indexOf(event) == this.moving){
+		       this.contentPlane.textSize(7.f + influencecamfont);
 		       String content = event.getContent();
 		       int extralines = timeline.countMatches(content,"\n");
 		       float contentwidth = this.contentPlane.textWidth(content);

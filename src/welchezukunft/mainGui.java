@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -469,6 +470,7 @@ void createMainGui(){
    extrapanel.add(changeStatus);
    mainPanelGui.add(extrapanel);
    
+   //------------------------------------------------------------------------------   
    //change Mode Panel
    FlowLayout experimentLayout = new FlowLayout();
    switchModePanel.setLayout(experimentLayout);
@@ -531,8 +533,8 @@ void createMainGui(){
    
    
    
-
-   //bottom Panel for Keyowrds
+   // ---------------------------------------------------------------
+   // Panel for Keyowrds
    // select a wordcloud
    
    JPanel wordcloudpanel = new JPanel();
@@ -551,6 +553,13 @@ void createMainGui(){
         public void mouseClicked(java.awt.event.MouseEvent e) {
            Integer selectedItem = keywordList.getSelectedIndex();
            timeline.currentCloudid = selectedItem;
+           if(timeline.showall == true) {
+        	   timeline.zoomOut();
+           }
+           else if(timeline.showall == false) {
+        	   timeline.wordFocus = timeline.clouds.get(timeline.currentCloudid).words.size()-1;
+        	   timeline.zoomIn();
+           }   
        }
    });
    JScrollPane keywordPane = new JScrollPane();
@@ -560,7 +569,61 @@ void createMainGui(){
    wordcloudpanel.setBackground(new Color(0.8f,0.8f,0.8f));
    mainPanelGui2.add(wordcloudpanel);
    
+   //add navigation buttons for keywords
+   JPanel keywordnavigation = new JPanel();
+   keywordnavigation.setLayout(experimentLayout);
+   //zoom in
+   JButton zoomin = new JButton("zoom in");
+   zoomin.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.wordFocus = timeline.clouds.get(timeline.currentCloudid).words.size()-1;
+    	   timeline.zoomIn();
+       }
+     });
+   keywordnavigation.add(zoomin);
+   // zoom out
+   JButton zoomout = new JButton("zoom out");
+   zoomout.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.zoomOut();
+       }
+     });
+   keywordnavigation.add(zoomout);
+   //next
+   JButton nextObject = new JButton("focus +");
+   nextObject.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+   		 timeline.wordFocus = timeline.wordFocus + 1;
+   		 if(timeline.wordFocus > timeline.curCloud.words.size()-1) timeline.wordFocus = 0;
+   		}
+     });
+   keywordnavigation.add(nextObject);
    
+   // zoom out
+   JButton prevObject = new JButton("focus -");
+   prevObject.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	timeline.wordFocus = timeline.wordFocus - 1;
+   		if(timeline.wordFocus < 0) timeline.wordFocus = timeline.curCloud.words.size()-1;
+       }
+     });
+   keywordnavigation.add(prevObject);  
+   
+   
+   
+   
+   //mainPanelGui2.add(Box.createVerticalStrut(5));
+   
+   mainPanelGui2.add(keywordnavigation);
+
    topPanel.add(mainPanelGui);
    topPanel.add(new JSeparator());
    topPanel.add(switchModePanel);

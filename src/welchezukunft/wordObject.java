@@ -10,20 +10,22 @@ public class wordObject {
 	wordcloud parent;
 	float init;
 	int time;
+	boolean overtime;
 	
-	wordObject(String word,PVector position,int id, float fxVal, int time, wordcloud p){
+	wordObject(String word,PVector position,int id, float fxVal, int time, boolean overtime, wordcloud p){
 		this.word = word;
 		this.pos = position;
 		this.id = id;
 		this.parent = p;
 		this.init = fxVal;
 		this.time = time;
+		this.overtime = overtime;
 		createBadge();
 	}
 	
 	private void createBadge(){
-		float halfwidth = 50;
-		float halfheigth = 35;
+		float halfwidth = timeline.badgeSizeX / 2f;
+		float halfheigth = timeline.badgeSizeY / 2f;
 		PShape wcloud = parent.wordCloud;
 		wcloud.beginShape(PConstants.QUADS);
 		wcloud.noStroke();

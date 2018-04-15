@@ -91,6 +91,7 @@ public class knotObject {
 		//calculate alpha
 		float div = (float)this.childs.size() / (float)maxCount;
 		float alp = 60f + parent.parent.map(parent.parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
+		int col = parent.parent.color(parent.parent.red(coly),parent.parent.green(coly),parent.parent.blue(coly),alp);
 
 		//create or shift connections
 		for(wordObject w : testList) {
@@ -102,7 +103,7 @@ public class knotObject {
 					connection.beginShape();
 					connection.bezierDetail(30);
 					connection.strokeWeight(2);
-					connection.stroke(coly,alp);
+					connection.stroke(col);
 					connection.noFill();
 					if(testList.size() < 2) {
 						connection.vertex(w.pos.x,w.pos.y,0);
@@ -120,8 +121,6 @@ public class knotObject {
 				//do for all Objects except last object
 				else {
 					PShape curve = parent.connections.getChild(this.childs.get(idFilter));
-					//TODO change alpha value
-					int col = parent.parent.color(parent.parent.red(coly),parent.parent.green(coly),parent.parent.blue(coly),alp);
 					curve.setStroke(col);
 					PVector v1 = curve.getVertex(0);
 					PVector v2 = curve.getVertex(1);

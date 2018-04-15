@@ -82,7 +82,7 @@ public class requestSQL {
 				wordcloud newcloud = new wordcloud(parent,cloudID2);
 				newcloud.id = cloudID2;
 				System.out.println(newcloud.id);
-				newcloud.createBadge(word, seconds,false);
+				newcloud.createBadge(word, seconds,sentence_id,false);
 				timeline.clouds.add(newcloud);
 				timeline.currentCloudid = timeline.clouds.size()-1;
 			}
@@ -90,12 +90,12 @@ public class requestSQL {
 			//add to old wordcloud
 			else if(wcExists == true) {
 				wordcloud targetCloud = timeline.clouds.stream().filter(wordcloud -> wordcloud.id == cloudID2).findFirst().get();
-				targetCloud.createBadge(word, seconds,false);
+				targetCloud.createBadge(word, seconds,sentence_id,false);
 			}
 			
 		}
 		timeline.eventLine.userGui.updateGUIKeywords();
-		System.out.println(timeline.clouds.size());
+		//System.out.println(timeline.clouds.size());
 	}
 	
 		
@@ -127,7 +127,7 @@ public class requestSQL {
 					keywordCount = timestampMsql.getInt(3);
 					cloudId = timestampMsql.getInt(5);
 				}
-			newKeywordList.add(new newKeyword(word,seconds, cloudId, id));	
+			newKeywordList.add(new newKeyword(word,seconds, cloudId, id,sentence_id));	
 		}
 		
 		

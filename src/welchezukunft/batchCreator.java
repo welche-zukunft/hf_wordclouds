@@ -25,7 +25,7 @@ public class batchCreator implements Runnable {
 						//get position in cloud-array to access right cloud
 						posinArray = timeline.clouds.indexOf(targetWC.get());
 						//create badge
-						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,true);
+						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,keyword.sentence_id,true);
 					}
 					else if(targetWC.isPresent()==false) {
 						//create new cloud
@@ -33,7 +33,7 @@ public class batchCreator implements Runnable {
 						timeline.clouds.add(target);
 						posinArray = timeline.clouds.size()-1;
 						//create badge
-						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,true);
+						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,keyword.sentence_id,true);
 						
 					}
 					//wait
