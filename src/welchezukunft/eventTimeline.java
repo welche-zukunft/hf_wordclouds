@@ -361,7 +361,8 @@ public class eventTimeline {
 		     }
 		     
 		     if(event.getImagePath() != null && event.getStatus() != Eventstatus.DELETED){
-		       String [] idfromfilename = event.getImagePath().split(".",1);
+		       String path = event.getImagePath();
+		       String [] idfromfilename = path.split("\\.");
 		       int imgnum = Integer.parseInt(idfromfilename[0]);
 		       float aspect = (float)(this.images[imgnum-1].width) / (float)(this.images[imgnum-1].height);
 		       this.contentPlane.tint(255,255-fontcol);

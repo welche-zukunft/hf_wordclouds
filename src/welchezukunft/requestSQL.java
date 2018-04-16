@@ -127,6 +127,7 @@ public class requestSQL {
 					keywordCount = timestampMsql.getInt(3);
 					cloudId = timestampMsql.getInt(5);
 				}
+			if(timeline.showall == true) timeline.zoomIn();
 			newKeywordList.add(new newKeyword(word,seconds, cloudId, id,sentence_id));	
 		}
 		

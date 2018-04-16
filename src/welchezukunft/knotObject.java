@@ -17,6 +17,10 @@ public class knotObject {
 	List<Integer> childs;
 	boolean init = false;
 	String word;
+	//radius
+	float rad = 0;
+	//1 if over :: -1 if under
+	int sign = 1;
 	
 	knotObject(float x, float y, int id, String word,wordcloud parent){
 		this.position = new PVector(x,y,0);
@@ -35,8 +39,8 @@ public class knotObject {
 	
 	public void changeposition(float x) {
 		this.position.x=x;
-		int sign = (0>this.position.y)?-1:1;
-		this.position.y+=this.position.x * 0.01 * sign;
+		this.sign = (0>this.position.y)?-1:1;
+		this.position.y+=this.position.x * 0.01 * this.sign;
 		connect();
 		placeCircle();
 	}
@@ -45,13 +49,12 @@ public class knotObject {
 		//if only one child = circle not visible
 		if(this.childs.size() < 2) {
 			PShape circle = this.parent.parent.createShape();
-			float radius = 0;
 			circle.beginShape(PConstants.TRIANGLE_FAN);
 			circle.fill(parent.colors.get(this.id));
 			circle.noStroke();
 			circle.vertex(this.position.x, this.position.y);
 			for (int i = 0; i <= 10; i++)   {
-				circle.vertex((float)(this.position.x + (radius * Math.cos(i * PConstants.TWO_PI / 10f))),(float)(this.position.y + (radius * Math.sin(i * PConstants.TWO_PI / 10f))));	
+				circle.vertex((float)(this.position.x + (this.rad * Math.cos(i * PConstants.TWO_PI / 10f))),(float)(this.position.y + (this.rad * Math.sin(i * PConstants.TWO_PI / 10f))));	
 			}	
 			circle.endShape();
 			parent.allCircles.addChild(circle);
@@ -59,10 +62,10 @@ public class knotObject {
 		//if more than one child = visible circle and draw at actual position
 		else if(this.childs.size() >= 2) {	
 			PShape circle = parent.allCircles.getChild(this.id);
-			float radius = 100.f+this.childs.size()*10;
+			this.rad = 100.f+this.childs.size()*10;
 			circle.setVertex(0,position);
 			for (int j = 1; j <= 11; j++)   {
-				PVector v1 = new PVector((float)(this.position.x + (radius * Math.cos(j * PConstants.TWO_PI / 10f))), (float)(this.position.y + (radius * Math.sin(j * PConstants.TWO_PI / 10f))));
+				PVector v1 = new PVector((float)(this.position.x + (this.rad * Math.cos(j * PConstants.TWO_PI / 10f))), (float)(this.position.y + (this.rad * Math.sin(j * PConstants.TWO_PI / 10f))));
 				circle.setVertex(j, v1);
 			}
 		}
@@ -102,7 +105,7 @@ public class knotObject {
 					PShape connection = parent.parent.createShape();
 					connection.beginShape();
 					connection.bezierDetail(30);
-					connection.strokeWeight(2);
+					connection.strokeWeight(5);
 					connection.stroke(col);
 					connection.noFill();
 					if(testList.size() < 2) {

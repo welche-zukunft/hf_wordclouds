@@ -1,5 +1,5 @@
 package welchezukunft;
 
 public enum mode {
-	CRISIS,KEYWORDS
+	CRISIS,KEYWORDS,CRISISSUM
 }
