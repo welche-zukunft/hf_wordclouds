@@ -17,8 +17,6 @@ public class logo {
 	PGraphics logoPlane;
 	timeline parent;
 	
-	Thread t1;
-	
 	public logo(timeline parent) {
 		this.parent = parent;
 		this.logoPlane = parent.createGraphics(parent.sizeTableX,parent.sizeTableY,PConstants.P3D);
@@ -58,7 +56,6 @@ public class logo {
 		 this.logoPlane.popMatrix(); 
 
 		 this.logoPlane.endDraw();
-		 //parent.parent.thread("movelogos")
 		 this.movelogos();
 		}
 		

@@ -30,6 +30,7 @@ public class timeline extends PApplet{
 	static wordcloud curCloud;
 	static logo logoWZ;
 	
+	public static physicsSum result;
 	
 	PVector lookat = new PVector(0,0,400);
 	
@@ -44,9 +45,7 @@ public class timeline extends PApplet{
 	static PGraphics wordcloudOutput;
 	static PGraphics wordcloudstatus;
 	
-	static PGraphics tester;
-	
-	PShape displayKW, displayCR, display2;
+	PShape displayKW, displayCR, displayCRS, display2;
 	PShape statusGradient;
 	PShape monitor;
 	PShape triangle;
@@ -99,7 +98,7 @@ public class timeline extends PApplet{
 		calibrationWin = new calibrationGui(this);
 		accessSQL = new requestSQL(this);
 		loadWorkshopInfos();
-
+		
         fullScreen(P3D, SPAN);
         smooth(16);
         
@@ -120,7 +119,6 @@ public class timeline extends PApplet{
 		caliOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
 		wordcloudstatus = createGraphics(1920,360,P3D);
 
-		tester = createGraphics(1920,720,P2D);
 		
 		//load externals
 		menufont = createFont("Avenir LT 45 Book", 148,true);
@@ -135,6 +133,8 @@ public class timeline extends PApplet{
 		eventLine.menu.createButtons();
 		eventLine.menu.createButtonsEvent();
 
+		result = new physicsSum(this);
+		
 		//init internals
 		createTimelineTexture();
 		createDisplay();	
@@ -312,11 +312,15 @@ public class timeline extends PApplet{
 					 	}
 									
 					mainOutput.endDraw();
+					
+					//create Output
+					if(this.showlogo == true){
+				    	this.logoWZ.drawlogo();
+					}
 					wordcloudOutput.beginDraw();
 					wordcloudOutput.image(mainOutput,0,0);
 					if(this.showlogo == true){
-					    	this.logoWZ.drawlogo();
-					    	this.wordcloudOutput.image(logoWZ.logoPlane,0,0);
+					    	this.wordcloudOutput.image(logoWZ.logoPlane,0,0,logoWZ.logoPlane.width,logoWZ.logoPlane.height);
 					   }
 					wordcloudOutput.endDraw();
 								
@@ -431,6 +435,10 @@ public class timeline extends PApplet{
     		else if (modus == mode.CRISIS) {
     			eventLine.drawing();
     			}
+    		else if (modus == mode.CRISISSUM) {
+    			result.drawPhysics();
+    		}
+    		
     	}
 	   
     	
@@ -464,6 +472,9 @@ public class timeline extends PApplet{
     		else if (modus == mode.CRISIS) {
     			shape(displayCR);
     		}
+    		else if (modus == mode.CRISISSUM) {
+    			shape(displayCRS);
+    		}
     	}
     	popMatrix();
     	    	
@@ -482,9 +493,14 @@ public class timeline extends PApplet{
     	//drawmonitor
 	    if(this.showzoommonitor == true && init == true && calibration == false){
 	    	  PGraphics output = this.wordcloudOutput;
+	    	  
 	    	  if(modus == mode.CRISIS) {
 	    		  output = eventLine.mainPlane;
 	    	  }
+	    	  else if(modus == mode.CRISISSUM) {
+	    		  output = result.targetplane;
+	    	  }
+	    	  
 		      pushMatrix();
 		      this.monitorzoom.set("tex", output);
 		      if(this.zoommonitor == 1.){
@@ -579,6 +595,16 @@ public class timeline extends PApplet{
     	displayCR.vertex(3840, 1080,1,1);
     	displayCR.vertex(0, 1080,0,1);
     	displayCR.endShape();    	
+ 
+      	displayCRS = createShape();
+    	displayCRS.beginShape();
+    	displayCRS.textureMode(NORMAL);
+    	displayCRS.texture(result.targetplane);
+    	displayCRS.vertex(0, 0,0,0);
+    	displayCRS.vertex(3840, 0,1,0);
+    	displayCRS.vertex(3840, 1080,1,1);
+    	displayCRS.vertex(0, 1080,0,1);
+    	displayCRS.endShape(); 
     	
        	display2 = createShape();
     	display2.beginShape();

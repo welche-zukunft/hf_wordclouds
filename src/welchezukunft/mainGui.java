@@ -33,7 +33,7 @@ public class mainGui {
 	eventTimeline parent;
 	
 	JFrame guiframe;
-	JPanel topPanel,topPanel2;
+	JPanel topPanel,topPanel2,topPanel3;
 	JPanel mainPanelGui,mainPanelGui2,switchModePanel;
 	JPanel changeStatus;
 	JButton GUIbutton,newButton,pendingButton,pausedButton;
@@ -155,6 +155,11 @@ void createMainGui(){
     this.topPanel2.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
     //this.topPanel2.setLayout(new GridLayout(3,0));
     this.topPanel2.setPreferredSize(new Dimension(1600,800));     
+ 
+    this.topPanel3 = new JPanel();
+    this.topPanel3.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    //this.topPanel2.setLayout(new GridLayout(3,0));
+    this.topPanel3.setPreferredSize(new Dimension(1600,800)); 
     
     //top Panel for Events
     // select a mode
@@ -482,7 +487,7 @@ void createMainGui(){
        public void actionPerformed(ActionEvent e)
        {
     	   timeline.modus = mode.CRISIS;
-    	   topPanel2.remove(switchModePanel);
+    	   guiframe.getContentPane().remove(switchModePanel);
     	   topPanel.add(switchModePanel);
     	   guiframe.setContentPane(topPanel);
     	   guiframe.validate();
@@ -497,7 +502,7 @@ void createMainGui(){
        public void actionPerformed(ActionEvent e)
        {
     	   timeline.modus = mode.KEYWORDS;
-    	   topPanel.remove(switchModePanel);
+    	   guiframe.getContentPane().remove(switchModePanel);
     	   topPanel2.add(switchModePanel);
     	   guiframe.setContentPane(topPanel2);
     	   guiframe.validate();
@@ -505,6 +510,23 @@ void createMainGui(){
        }
      });
    switchModePanel.add(switchMode2);
+   
+   JButton switchMode3 = new JButton("Switch to Sum");
+   switchMode3.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.result.addMover(40);
+    	   timeline.modus = mode.CRISISSUM;
+    	   guiframe.getContentPane().remove(switchModePanel);
+    	   topPanel3.add(switchModePanel);
+    	   guiframe.setContentPane(topPanel3);
+    	   guiframe.validate();
+    	   
+       }
+     });
+   switchModePanel.add(switchMode3);
+   
 
    //Screensaverbutton
    JButton ScreenSaverButton = new JButton("Screensaver");
