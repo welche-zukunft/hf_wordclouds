@@ -36,6 +36,7 @@ public class timeline extends PApplet{
 	
 	PFont menufont;
 	PImage calibration_img;
+	static PImage imagelogo;
 	static PImage timeline,timelineout;
 	static PShader corner;
 	static PShader monitorzoom;
@@ -124,7 +125,7 @@ public class timeline extends PApplet{
 		menufont = createFont("Avenir LT 45 Book", 148,true);
 		calibration_img = loadImage("./resources/pic/diagonal3.png");
 		corner = loadShader("./resources/shader/corner.glsl");
-
+		imagelogo = loadImage("./resources/pic/wz_logo.png");
 		gradientShader = loadShader("./resources/shader/gradient.glsl");
 		
 		//init EventTimeline
@@ -276,8 +277,7 @@ public class timeline extends PApplet{
 								mainOutput.translate(w.pos.x,w.pos.y,0);
 								float scaleF = (float)1.+ 0.2f*(1.f - w.init);
 								mainOutput.scale(scaleF);
-								
-								
+	
 								mainOutput.textAlign(CENTER, CENTER);
 								mainOutput.textSize(60);
 								
@@ -303,7 +303,8 @@ public class timeline extends PApplet{
 							  mainOutput.textSize(18);
 							  mainOutput.textAlign(LEFT,TOP);
 							  float alp = 1 - (0.1f * (lookat.z - 400));
-							  int col = getComplimentColor(w.pos.x / curCloud.lastposX);
+							  //int col = getComplimentColor(w.pos.x / curCloud.lastposX);
+							  int col = getFontColor(w.pos.x / curCloud.lastposX);
 							  mainOutput.fill(col,255*alp);
 							  mainOutput.translate(w.pos.x, w.pos.y,0);
 							  mainOutput.text(w.word, -1.f * (this.badgeSizeX/2f), -1.f * (this.badgeSizeY/2f),badgeSizeX,badgeSizeY);
@@ -437,6 +438,7 @@ public class timeline extends PApplet{
     			}
     		else if (modus == mode.CRISISSUM) {
     			result.drawPhysics();
+    			image(result.legend,1920,720,result.legend.width,result.legend.height);
     		}
     		
     	}
@@ -498,7 +500,7 @@ public class timeline extends PApplet{
 	    		  output = eventLine.mainPlane;
 	    	  }
 	    	  else if(modus == mode.CRISISSUM) {
-	    		  output = result.targetplane;
+	    		  output = result.allplane;
 	    	  }
 	    	  
 		      pushMatrix();
@@ -599,7 +601,7 @@ public class timeline extends PApplet{
       	displayCRS = createShape();
     	displayCRS.beginShape();
     	displayCRS.textureMode(NORMAL);
-    	displayCRS.texture(result.targetplane);
+    	displayCRS.texture(result.allplane);
     	displayCRS.vertex(0, 0,0,0);
     	displayCRS.vertex(3840, 0,1,0);
     	displayCRS.vertex(3840, 1080,1,1);
@@ -773,19 +775,20 @@ public class timeline extends PApplet{
 		}
 	}
     
-    private int getComplimentColor(float time) {
-    	int red = (int)(colorGradients.get(currentCloudid).getR1() * time + colorGradients.get(currentCloudid).getR2() * (1 - time));
-    	int green = (int)(colorGradients.get(currentCloudid).getG1() * time + colorGradients.get(currentCloudid).getG2() * (1 - time));
-    	int blue = (int)(colorGradients.get(currentCloudid).getB1() * time + colorGradients.get(currentCloudid).getB2() * (1 - time));
-        // get existing colors
-        int alpha = 255;
-        // find compliments
-        red = (~red) & 0xff;
-        blue = (~blue) & 0xff;
-        green = (~green) & 0xff;
-        return color(red, green, blue);
-      }
 
+    private int getFontColor(float time) {
+    	int R = (int)(colorGradients.get(currentCloudid).getR1() * time + colorGradients.get(currentCloudid).getR2() * (1 - time));
+    	int G = (int)(colorGradients.get(currentCloudid).getG1() * time + colorGradients.get(currentCloudid).getG2() * (1 - time));
+    	int B = (int)(colorGradients.get(currentCloudid).getB1() * time + colorGradients.get(currentCloudid).getB2() * (1 - time));
+ 	    int d = 0;
+ 	    // Counting the perceptive luminance - human eye favors green color... 
+ 	    double a = 1 - ( 0.299 * R + 0.587 * G + 0.114 * B)/255;
+ 	    if (a < 0.5)
+ 	       d = 0; // bright colors - black font
+ 	    else
+ 	       d = 255; // dark colors - white font
+    	return d;
+    }
     
     
 }

@@ -21,6 +21,7 @@ public class knotObject {
 	float rad = 0;
 	//1 if over :: -1 if under
 	int sign = 1;
+	int knotCol;
 	
 	knotObject(float x, float y, int id, String word,wordcloud parent){
 		this.position = new PVector(x,y,0);
@@ -37,6 +38,25 @@ public class knotObject {
 		return childs.size();
 	}
 	
+	//TODO check position
+	public boolean checkPosition(PVector pos, float size) {
+		boolean canbeplaced = true;
+		for(knotObject k : parent.knots) {
+			float dist = (float) Math.sqrt(Math.pow((k.position.x - pos.x), 2) + Math.pow((k.position.y - pos.y), 2));
+			if(dist > k.rad + size) {
+				continue;
+			}
+			if(pos.y - size < k.position.y + k.rad ) {
+			
+				
+			}
+			if(canbeplaced == false) {
+				break;
+			}
+		}
+		return canbeplaced;
+	}
+	
 	public void changeposition(float x) {
 		this.position.x=x;
 		this.sign = (0>this.position.y)?-1:1;
@@ -50,7 +70,7 @@ public class knotObject {
 		if(this.childs.size() < 2) {
 			PShape circle = this.parent.parent.createShape();
 			circle.beginShape(PConstants.TRIANGLE_FAN);
-			circle.fill(parent.colors.get(this.id));
+			circle.fill(knotCol);
 			circle.noStroke();
 			circle.vertex(this.position.x, this.position.y);
 			for (int i = 0; i <= 10; i++)   {
@@ -73,8 +93,7 @@ public class knotObject {
 	}
 	
 	private void connect() {
-		int coly = parent.colors.get(this.id);
-		
+		this.knotCol = parent.colors.get(this.id);
 		//get count of appearances 
 		int count = (int) parent.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
 		
@@ -94,7 +113,7 @@ public class knotObject {
 		//calculate alpha
 		float div = (float)this.childs.size() / (float)maxCount;
 		float alp = 60f + parent.parent.map(parent.parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
-		int col = parent.parent.color(parent.parent.red(coly),parent.parent.green(coly),parent.parent.blue(coly),alp);
+		int col = parent.parent.color(parent.parent.red(this.knotCol),parent.parent.green(this.knotCol),parent.parent.blue(this.knotCol),alp);
 
 		//create or shift connections
 		for(wordObject w : testList) {
@@ -143,6 +162,6 @@ public class knotObject {
 		
 	}
 	
-	
+
 	
 }

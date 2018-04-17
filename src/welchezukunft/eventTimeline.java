@@ -299,6 +299,7 @@ public class eventTimeline {
 		       float HLheight = 26.f + influencecamfont ;
 		       this.contentPlane.textSize(HLheight);
 		       String HLtext = event.getHeadline();
+		       HLheight+=contentPlane.textAscent()+contentPlane.textDescent();
 		       float HLsize = contentPlane.textWidth(HLtext);
 		       float widthtoborder = Math.abs(upperLeftWorld.y - (event.getYPos()*this.upperLeftWorld.y))+10; 
 		       this.contentPlane.textAlign(PConstants.LEFT,PConstants.TOP);
@@ -311,10 +312,10 @@ public class eventTimeline {
 		       }
 		       else if (v.y > 0){
 			       this.contentPlane.translate(v.x-(this.size)+((lines*HLheight)*0.5f),v.y + (2*this.size + this.size/2.f),z);
-			       this.contentPlane.rotateZ((float) Math.toRadians(-90));
+			       this.contentPlane.rotateZ((float) Math.toRadians(90));
 		       }     
-
-		       this.contentPlane.text(HLtext,0,0,widthtoborder,lines*HLheight);
+		       this.contentPlane.textAlign(PConstants.LEFT,PConstants.CENTER);
+		       this.contentPlane.text(HLtext,0,0,widthtoborder,(lines*HLheight));
 		     this.contentPlane.popMatrix();
 		      }
 		      //horizontal Text

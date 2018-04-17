@@ -306,7 +306,8 @@ public class eventTimelineMenu {
 		   this.menuText.translate(this.buttonPositions[6].x*this.menusize,this.buttonPositions[6].y*this.menusize,0);
 		   this.menuText.text(this.labels[6],0,0);
 		   this.menuText.popMatrix();
-	   }  
+	   } 
+	   
 	if(this.showbasket == false && this.shownewevents == false && this.parent.showtimeline == true){
 		this.menuText.pushMatrix();
 	  float scaleTimeY = 0.5f;
@@ -314,7 +315,7 @@ public class eventTimelineMenu {
 	   scaleTimeY = 0.0f; 
 	  }
 	  this.menuText.translate(this.menusize/2.f,scaleTimeY*this.menusize/2.f,0); 
-	  float pos = this.parent.parent.map(this.parent.newcameraPosX,this.parent.eventBack.TLwidth*-1,this.parent.eventBack.TLwidth,2007,2013);
+	  float pos = this.parent.parent.map(this.parent.newcameraPosX,this.parent.eventBack.TLwidth*-1,this.parent.eventBack.TLwidth,2007,2015);
 	  int year = (int)Math.floor(pos);
 	  int month = (int)((pos - (float)year)*12.f)+1;
 	  this.menuText.textAlign(PConstants.CENTER,PConstants.TOP);
@@ -339,6 +340,19 @@ public class eventTimelineMenu {
 	        	 this.subText.rotate((float)Math.toRadians(-90));
 	          Event current = parent.eventList.get(newids[i]-1);
 	          this.subText.stroke(0);
+	          /*
+	          String dateString = "";
+		        if(current.getDay() != 0) {
+		        	dateString += Integer.toString(current.getDay()) + ".";
+		        }
+		        if(!current.getMonth().equals("0")) {
+		        	dateString += current.getMonth().substring(0, 3) + ".";
+		        }
+		        if(current.getYear() != 0) {
+		        	int yearnum = (current.getYear()-2000);
+		        	dateString += String.format("%02d", yearnum) + " / ";
+		        }
+		        */
 	          this.subText.text(current.getHeadline(),(basketbuttonSizeX*-1f)+2f,(basketbuttonSizeY*-1.f)+1f,basketbuttonSizeX*2f,basketbuttonSizeY+5f);
 	          this.subText.popMatrix();
 	         }  
@@ -360,7 +374,7 @@ public class eventTimelineMenu {
 	    	   this.subText.rotate((float)Math.toRadians(-90));
 	        Event current = this.parent.eventList.get(basketids[i]-1);
 	        this.subText.stroke(0);
-	        String dateString = "";
+	        /*String dateString = "";
 	        if(current.getDay() != 0) {
 	        	dateString += Integer.toString(current.getDay()) + ".";
 	        }
@@ -371,8 +385,8 @@ public class eventTimelineMenu {
 	        	int yearnum = (current.getYear()-2000);
 	        	dateString += String.format("%02d", yearnum) + " / ";
 	        }
-	        
-	        this.subText.text(dateString + current.getHeadline(),(this.basketbuttonSizeX*-1)+2,(this.basketbuttonSizeY*-1.f)+1,this.basketbuttonSizeX*2,this.basketbuttonSizeY+5);
+	        */
+	        this.subText.text(current.getHeadline(),(this.basketbuttonSizeX*-1)+2,(this.basketbuttonSizeY*-1.f)+1,this.basketbuttonSizeX*2,this.basketbuttonSizeY+5);
 	        this.subText.popMatrix();
 	       }  
 	       this.subText.endDraw();

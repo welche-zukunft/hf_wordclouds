@@ -10,7 +10,7 @@ import processing.opengl.PGraphics3D;
 public class eventBackground {
 	
 	static int TLwidth = 8000;
-	static int years = 6;
+	static int years = 8;
 	float [] scalesizeYear = {40,8};
 	float [] scalesizeMonth = {((((float)this.TLwidth*2.f)/(float)this.years)/(float)12)-20,5};
 	float deltaY;

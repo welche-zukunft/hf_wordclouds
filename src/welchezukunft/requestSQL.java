@@ -81,7 +81,6 @@ public class requestSQL {
 			if(wcExists == false) {
 				wordcloud newcloud = new wordcloud(parent,cloudID2);
 				newcloud.id = cloudID2;
-				System.out.println(newcloud.id);
 				newcloud.createBadge(word, seconds,sentence_id,false);
 				timeline.clouds.add(newcloud);
 				timeline.currentCloudid = timeline.clouds.size()-1;
@@ -95,7 +94,6 @@ public class requestSQL {
 			
 		}
 		timeline.eventLine.userGui.updateGUIKeywords();
-		//System.out.println(timeline.clouds.size());
 	}
 	
 		
@@ -184,7 +182,6 @@ public class requestSQL {
 		     
 		     // if event is already in list just update content
 		     else if(this.eventsMsql.getInt(11) <= this.currentMaxIdEvents){
-		    	 System.out.println(this.eventsMsql.getInt(11) + "/ " + this.currentMaxIdEvents);
 		       int pos = this.eventsMsql.getInt(11) - 1;
 		       timeline.eventLine.eventList.get(pos).setHeadline(eventsMsql.getString(10));
 		       timeline.eventLine.eventList.get(pos).setContent(eventsMsql.getString(2));

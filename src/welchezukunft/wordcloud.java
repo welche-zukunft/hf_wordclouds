@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import javax.swing.plaf.synth.SynthSpinnerUI;
 
@@ -191,6 +192,10 @@ public class wordcloud {
 	
 	public String getWsName() {
 		return this.name;
+	}
+	
+	public Stream<knotObject> getKnots() {
+		return knots.stream().filter(k -> k.childs.size() > 1);
 	}
 
 }

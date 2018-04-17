@@ -34,7 +34,7 @@ public class mainGui {
 	
 	JFrame guiframe;
 	JPanel topPanel,topPanel2,topPanel3;
-	JPanel mainPanelGui,mainPanelGui2,switchModePanel;
+	JPanel mainPanelGui,mainPanelGui2,switchModePanel,mainPanelGui3;
 	JPanel changeStatus;
 	JButton GUIbutton,newButton,pendingButton,pausedButton;
 	
@@ -44,7 +44,7 @@ public class mainGui {
 	DefaultListModel keywordModel;
 	JList keywordList;
 	
-	String[] GUIyears = {"alles","2007", "2008", "2009", "2010", "2011","2012"};
+	String[] GUIyears = {"alles","2007", "2008", "2009", "2010", "2011","2012","2013","2014"};
 	String[] GUIworkshops  = {"alle","Pavlina Tcherneva","Harald Schumann","Cho Khong(UK)","Jürg Müller(Switzerland)","Eyvandur Gunnarsson (Iceland)","Evan Liaras (Greece)","José Soeiro(Portugal)","Isabel Feichtner (European law)","Kai von Lewinski (German Law)","Otto Steinmetz (Banks)","Cornelia Dahaim (global workforce)","Joseph Vogl (eternal critic)","Ariella Helfgott","Ulrike Hermann (Moderation)","Volker Heise (Moderation)"};
 	String[] GUImode = {"timeline","paused"};
 	String selectedItem;
@@ -141,7 +141,12 @@ void createMainGui(){
     this.mainPanelGui2.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
     this.mainPanelGui2.setLayout(new GridLayout(1,0));
     this.mainPanelGui2.setPreferredSize(new Dimension(1600,700));
-   
+
+    this.mainPanelGui3 = new JPanel();
+    this.mainPanelGui3.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+    this.mainPanelGui3.setLayout(new GridLayout(1,0));
+    this.mainPanelGui3.setPreferredSize(new Dimension(1600,700));
+    
     this.switchModePanel = new JPanel();
     this.switchModePanel.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
     this.switchModePanel.setPreferredSize(new Dimension(1600,100));
@@ -161,7 +166,7 @@ void createMainGui(){
     //this.topPanel2.setLayout(new GridLayout(3,0));
     this.topPanel3.setPreferredSize(new Dimension(1600,800)); 
     
-    //top Panel for Events
+    //top Panel for Events --------------------------------------------------------------------------------------------------------------
     // select a mode
    JPanel modepanel = new JPanel();
    modepanel.setLayout(new GridLayout(2,1));
@@ -475,8 +480,8 @@ void createMainGui(){
    extrapanel.add(changeStatus);
    mainPanelGui.add(extrapanel);
    
-   //------------------------------------------------------------------------------   
-   //change Mode Panel
+ 
+   //change Mode Panel --------------------------------------------------------------------------------------------------------------
    FlowLayout experimentLayout = new FlowLayout();
    switchModePanel.setLayout(experimentLayout);
    switchModePanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
@@ -516,7 +521,11 @@ void createMainGui(){
      {
        public void actionPerformed(ActionEvent e)
        {
-    	   timeline.result.addMover(40);
+    	   //setUp physics
+    	   timeline.result.addMover();
+    	   timeline.result.a.G = 100;
+    	   timeline.result.a.impulseC = false;
+    	   //change main Modus
     	   timeline.modus = mode.CRISISSUM;
     	   guiframe.getContentPane().remove(switchModePanel);
     	   topPanel3.add(switchModePanel);
@@ -555,8 +564,8 @@ void createMainGui(){
    
    
    
-   // ---------------------------------------------------------------
-   // Panel for Keyowrds
+  
+   // Panel for Keyowrds --------------------------------------------------------------------------------------------------------------
    // select a wordcloud
    
    JPanel wordcloudpanel = new JPanel();
@@ -638,13 +647,39 @@ void createMainGui(){
        }
      });
    keywordnavigation.add(prevObject);  
-   
-   
-   
-   
-   //mainPanelGui2.add(Box.createVerticalStrut(5));
-   
    mainPanelGui2.add(keywordnavigation);
+   
+   //sum panel --------------------------------------------------------------------------------------------------------------
+   //add navigation buttons for keywords
+   JPanel sumUI = new JPanel();
+   sumUI.setLayout(experimentLayout);
+   //get all movers
+   JButton gravity = new JButton("gravity");
+   gravity.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.result.a.impulse(true);
+       }
+     });
+   sumUI.add(gravity);
+   
+ //push all movers
+   JButton impulse = new JButton("impulse");
+   impulse.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   timeline.result.a.impulse(false);
+       }
+     });
+   sumUI.add(impulse);
+   
+   mainPanelGui3.add(sumUI);
+   
+   
+   
+   
 
    topPanel.add(mainPanelGui);
    topPanel.add(new JSeparator());
@@ -652,7 +687,8 @@ void createMainGui(){
    
    topPanel2.add(mainPanelGui2);
    topPanel2.add(new JSeparator());
-   //topPanel2.add(switchModePanel);
+   
+   topPanel3.add(mainPanelGui3);
   
    
    guiframe.setContentPane(topPanel);

@@ -34,7 +34,7 @@ public class batchCreator implements Runnable {
 						posinArray = timeline.clouds.size()-1;
 						//create badge
 						timeline.clouds.get(posinArray).createBadge(keyword.word, keyword.seconds,keyword.sentence_id,true);
-						
+						timeline.eventLine.userGui.updateGUIKeywords();
 					}
 					//wait
 					Thread.sleep(8000/keywords.size());

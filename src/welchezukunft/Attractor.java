@@ -1,18 +1,29 @@
 package welchezukunft;
 
+import java.util.Random;
+
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.BodyType;
 
+import processing.core.PImage;
+
 public class Attractor {
 
 private Body body;
 private float r;
 private physicsSum parent;
+public float G = 100;
+private int time = 0;
+private int currentImpulse = 0;
+private Random rand;
+public boolean impulseC = false; 
+
 
 	Attractor(float r_, float x, float y,physicsSum parent) {
+		 rand = new Random();
 		 this.parent = parent;
 		 r = r_;
 		 // Define a body
@@ -36,7 +47,6 @@ private physicsSum parent;
 // No need to convert to pixels and back
 	
 	Vec2 attract(Mover m) {
-		 float G = 100;
 		 // clone() makes us a copy
 		 Vec2 pos = body.getWorldCenter();    
 		 Vec2 moverPos = m.body.getWorldCenter();
@@ -54,11 +64,46 @@ private physicsSum parent;
 		 return force;
 	}
 
+	void changeG() {
+		if(impulseC == true) {
+			int change = rand.nextInt(currentImpulse/10);
+			this.G += change;
+			//System.out.println(this.G + "/" + change + "/" + currentImpulse);
+			if(this.G > 100) {
+				impulseC = false;	
+			}
+		}
+		
+		else if(impulseC == false) {
+			if(rand.nextFloat() > 0.99) {
+				time = 0;
+				currentImpulse = rand.nextInt(1200)+40;
+				this.G = (float) (-1. * currentImpulse);
+				impulseC = true;
+			}	
+		}
+		
+	}
+	
+	void impulse(boolean direction) {
+		if(direction == true) {
+			this.G = 5000;
+			impulseC = false;
+			time = 0;
+		}
+		if(direction == false) {
+			this.G = -1500;
+			currentImpulse = 1500;
+			impulseC = true;
+			time = 0;
+		}		
+	}
+
 	void display() {
-		 // We look at each body and get its screen position
+		 time ++;
 		 Vec2 pos = parent.box2d.getBodyPixelCoord(body);
-		 // Get its angle of rotation
 		 float a = body.getAngle();
+		 
 		 parent.targetplane.pushMatrix();
 		 parent.targetplane.translate(pos.x,pos.y);
 		 parent.targetplane.rotate(a);
@@ -66,6 +111,7 @@ private physicsSum parent;
 		 parent.targetplane.stroke(0);
 		 parent.targetplane.strokeWeight(1);
 		 parent.targetplane.ellipse(0,0,r*2,r*2);
+		 parent.targetplane.image(timeline.imagelogo,-r,-r,2*r,(2*r) * (timeline.imagelogo.width/timeline.imagelogo.height));
 		 parent.targetplane.popMatrix();
 	}
 }
