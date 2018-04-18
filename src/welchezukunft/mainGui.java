@@ -12,7 +12,6 @@ import java.awt.event.MouseAdapter;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -22,6 +21,9 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
@@ -632,6 +634,7 @@ void createMainGui(){
        {
    		 timeline.wordFocus = timeline.wordFocus + 1;
    		 if(timeline.wordFocus > timeline.curCloud.words.size()-1) timeline.wordFocus = 0;
+   		 timeline.automodus = false;
    		}
      });
    keywordnavigation.add(nextObject);
@@ -644,6 +647,7 @@ void createMainGui(){
        {
     	timeline.wordFocus = timeline.wordFocus - 1;
    		if(timeline.wordFocus < 0) timeline.wordFocus = timeline.curCloud.words.size()-1;
+   		timeline.automodus = false;
        }
      });
    keywordnavigation.add(prevObject);  
@@ -674,6 +678,37 @@ void createMainGui(){
        }
      });
    sumUI.add(impulse);
+  
+   //Spinner Labels
+   JLabel countHL = new JLabel("Movercount:",SwingConstants.CENTER);
+   JLabel sizeHL = new JLabel("Moversize:",SwingConstants.CENTER);
+   
+
+   // Spinner
+   SpinnerModel MovCount = new SpinnerNumberModel(40, 0, 100, 1);
+   SpinnerModel MovSize = new SpinnerNumberModel(20, 0, 100, 1);
+   
+   JSpinner mcount = new JSpinner(MovCount);
+   JSpinner msize = new JSpinner(MovSize);
+   
+   sumUI.add(countHL);
+   sumUI.add(mcount);
+   sumUI.add(sizeHL);
+   sumUI.add(msize);
+   
+   //redraw physics
+   JButton redraw = new JButton("redraw");
+   redraw.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   
+    	   timeline.result.maxiMoverCount = (int) mcount.getValue();
+    	   timeline.result.MoverSize = (int) msize.getValue();
+    	   timeline.result.addMover();
+       }
+     });
+   sumUI.add(redraw);
    
    mainPanelGui3.add(sumUI);
    

@@ -3,9 +3,11 @@ package welchezukunft;
 import static java.lang.Math.toIntExact;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
 import javax.swing.plaf.synth.SynthSpinnerUI;
@@ -54,11 +56,11 @@ public class wordcloud {
 		this.parent = parent;
 		this.id = id;
 		this.setColorGrad();
-		words = new ArrayList<wordObject>();
-	    knots = new ArrayList<knotObject>();
+		words = Collections.synchronizedList(new CopyOnWriteArrayList<wordObject>());
+	    knots = Collections.synchronizedList(new CopyOnWriteArrayList<knotObject>());
 	    colors = new ArrayList<Integer>();
 	    wordCountperSentence = new ArrayList<sentence>();
-	    
+	
 	    allCircles = parent.createShape(PConstants.GROUP);
 		wordCloud = parent.createShape();
 		connections = parent.createShape(PConstants.GROUP);
@@ -115,7 +117,7 @@ public class wordcloud {
 		if(this.words.size() == 0) {
 			this.starttime = time;
 		}
-		
+
 		//check if word was already used
 		Optional<knotObject> currentKnot = this.knots.stream()
 		        .filter(knotObject -> knotObject.word.equalsIgnoreCase(text))
@@ -139,11 +141,8 @@ public class wordcloud {
 			//create word
 			createWord(fx,text,time,knotid,countinsentence,overtime);
 			//generate new knotObject at position
-			int [] dir = {-1,1};
-			float posy = parent.random((float)-1600.,(float)-1000.) * dir[(int)parent.random(2)];
-			this.minY = (posy <= this.minY) ? posy : this.minY;
-			this.maxY = (posy >= this.maxY) ? posy : this.maxY;
-			this.knots.add(new knotObject(this.lastposX,posy,this.knots.size(),text,this));
+
+			this.knots.add(new knotObject(this.lastposX,this.knots.size(),text,this));
 			
 		}
 		

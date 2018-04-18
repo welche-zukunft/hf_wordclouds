@@ -1,6 +1,7 @@
 package welchezukunft;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ public class physicsSum {
 	List<Mover> movers;
 	Attractor a;
 	Random rand;
+	public int maxiMoverCount = 40;
+	public int MoverSize = 20;
 	
 	public physicsSum(PApplet parent) {
 		rand = new Random();
@@ -53,14 +56,14 @@ public class physicsSum {
 	
 	public void removeBodies() {
 		if(box2d.world.getBodyCount() > 0){
-		    for(int i = movers.size() - 1; i > 0; i--){
-		        Body b = movers.get(i).body;
+		    for(int i = movers.size(); i > 0; i--){
+		        Body b = movers.get(i-1).body;
 		        if(b == null){
 		            movers.remove(i);
 		            continue;
 		        }
 		        box2d.world.destroyBody(b);
-		        movers.remove(i);
+		        movers.remove(i-1);
 		    }
 		}else{
 		    // There is no bodies in the world, so the bodies in our list are just
@@ -74,20 +77,27 @@ public class physicsSum {
 	public void addMover() {
 		legendInit  = false;
 		removeBodies();
+		
 		List<knotObject> collectKnots = timeline.clouds.stream()
 				.filter(t -> t.knots.size() > 0)
                 .flatMap(wordcloud::getKnots)
                 .collect(Collectors.toList());
-
-		for(knotObject k : collectKnots) {
+		
+        Collections.sort(collectKnots);
+        
+		
+        int maxParticles = (collectKnots.size() < this.maxiMoverCount ) ? collectKnots.size() : this.maxiMoverCount;
+        
+		for(knotObject k : collectKnots.subList(0, maxParticles)) {
 			if(k.childs.size() > 1) {
-				float radius = k.childs.size() * 30.f;		
-				int color = timeline.workshopColors.get(k.parent.id - 1);
+				float radius = k.childs.size() * (float)this.MoverSize;		
+				int color = timeline.workshopColorsBG.get(k.parent.id - 1);
 				movers.add(new Mover(radius,k.word,color,this));
 			}
 		}
 
 	}
+	
 	
 	public void drawPhysics(){
 		if(legendInit == false) {
@@ -137,7 +147,7 @@ public class physicsSum {
 		//allplane.resetShader();
 		
 		if(timeline.showlogo == true){
-			targetplane.image(timeline.logoWZ.logoPlane,0,0,timeline.logoWZ.logoPlane.width,timeline.logoWZ.logoPlane.height);	
+			allplane.image(timeline.logoWZ.logoPlane,0,0,timeline.logoWZ.logoPlane.width,timeline.logoWZ.logoPlane.height);	
 		}
 		
 		allplane.endDraw();
@@ -150,18 +160,27 @@ public class physicsSum {
 				.filter(t -> t.knots.size() > 0)
 				.filter(t -> t.getKnots().anyMatch(w -> w.childs.size() >= 1))
 				.collect(Collectors.toList());
-	
-		int t = timeline.clouds.get(0).knots.get(0).getCount();
+
+		double maxwidth = Math.ceil(timeline.sqrt(collectClouds.size()));
+		double maxheight = Math.ceil(collectClouds.size() / maxwidth);
+		//System.out.println(maxwidth + "/" + maxheight + "/" + collectClouds.size());
 		legend.beginDraw();
-		float deltax = legend.width/(collectClouds.size()+1);
+		double deltax = legend.width/maxwidth;
+		double deltay = legend.height/maxheight;
+		//System.out.println(deltax + "/" + deltay);
 		for(wordcloud w : collectClouds) {
 			legend.pushMatrix();
-			legend.translate((float) ((deltax/2.) + deltax * collectClouds.indexOf(w)), 30);
-			legend.fill(timeline.workshopColors.get(w.getId()-1));
+			double posx = collectClouds.indexOf(w) % maxwidth;
+			double posy = Math.floor((double)collectClouds.indexOf(w) / maxwidth);
+			//System.out.println(posx + "/" + posy);
+			legend.translate((float) ((deltax * 0.1f) + (deltax * posx)), (float) ((deltay * 0.1f) + (posy * deltay)));
+			legend.fill(timeline.workshopColorsBG.get(w.getId()-1));
 			legend.noStroke();
-			legend.rect(0, 0, deltax * 0.9f, 80f);
+			legend.rect(0, 0, (float) (deltax * 0.8f), (float) (deltay * 0.8f));
+			legend.fill(timeline.workshopColors.get(w.getId()-1));
+			legend.textSize(60 - collectClouds.size() * 4);
+			legend.text(w.name, 10, 10,(float) (deltax * 0.8f) -10, (float) (deltay * 0.8f) -10);
 			legend.popMatrix();
-			
 		}
 		legend.endDraw();
 		legendInit = true;

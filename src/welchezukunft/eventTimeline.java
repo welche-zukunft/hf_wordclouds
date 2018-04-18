@@ -1,6 +1,7 @@
 package welchezukunft;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import processing.core.PApplet;
@@ -136,7 +137,7 @@ public class eventTimeline {
 		   images[i] = parent.requestImage("./resources/img/" + (i+1) + ".jpg"); 
 		  }
 		  
-		 eventList = new ArrayList<Event>();
+		 eventList = Collections.synchronizedList(new ArrayList<Event>());
 		 eventList.addAll(database.getNewEventsSetup());
 		  
 		 userGui.updateGUI();

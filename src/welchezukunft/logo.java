@@ -22,7 +22,7 @@ public class logo {
 		this.logoPlane = parent.createGraphics(parent.sizeTableX,parent.sizeTableY,PConstants.P3D);
 	}
 	
-	//TODO: make drawlogo a thread 
+	
 	void drawlogo(){
 		 this.logoPlane.beginDraw();
 		 this.logoPlane.clear();

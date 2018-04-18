@@ -2,6 +2,7 @@ package welchezukunft;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.Comparator;
@@ -10,7 +11,7 @@ import org.gicentre.utils.move.Ease;
 
 import processing.core.*;
 
-public class knotObject {
+public class knotObject implements Comparable<knotObject>{
 	PVector position;
 	int id;
 	wordcloud parent;
@@ -23,8 +24,32 @@ public class knotObject {
 	int sign = 1;
 	int knotCol;
 	
-	knotObject(float x, float y, int id, String word,wordcloud parent){
-		this.position = new PVector(x,y,0);
+	
+	knotObject(float x, int id, String word,wordcloud parent){
+		if ( (id & 1) == 0 ) this.sign = 1; 
+		else this.sign = -1;
+		float mapx = x;
+		if(mapx > 10000) mapx = 10000;
+		float posy = timeline.map(mapx,0f,10000f,1000f,1600.f) * this.sign;
+		parent.minY = (posy <= parent.minY) ? posy : parent.minY;
+		parent.maxY = (posy >= parent.maxY) ? posy : parent.maxY;
+		this.position = new PVector(x,posy,0);
+		
+		
+		if(parent.knots.size() > 0) {
+			boolean placeit = false;
+			while(placeit == false) {
+				float radi = 100.f+1*10;
+				Optional<knotObject> overlap = parent.knots.stream().filter(k -> (Math.abs((this.position.x - k.position.x)) <= (radi + k.rad)) == true).findFirst();
+				if(overlap.isPresent()) {
+					this.position.x -= 100;
+				}
+				else {
+					placeit = true;
+				}
+				
+			}
+		}
 		this.id = id;
 		this.word = word;
 		this.parent = parent;
@@ -32,38 +57,51 @@ public class knotObject {
 		//connect adds also child objects -> connect first than (re)place circle
 		connect();
 		placeCircle();
+
+	}
+	
+	@Override
+	public String toString() {
+		return "this is knot object: " + this.id + "/ childs:" + this.childs.size();
 	}
 	
 	public int getCount() {
 		return childs.size();
 	}
 	
-	//TODO check position
-	public boolean checkPosition(PVector pos, float size) {
-		boolean canbeplaced = true;
-		for(knotObject k : parent.knots) {
-			float dist = (float) Math.sqrt(Math.pow((k.position.x - pos.x), 2) + Math.pow((k.position.y - pos.y), 2));
-			if(dist > k.rad + size) {
-				continue;
+		
+	public void changeposition(float x) {
+		//this.position.x=x;
+		//this.sign = (0>this.position.y)?-1:1;
+		//this.position.y += this.position.x * 0.01f * this.sign;
+		if ( (id & 1) == 0 ) this.sign = 1; 
+		else this.sign = -1;		
+		float mapx = x;
+		if(mapx > 10000) mapx = 10000;
+		float posy = timeline.map(mapx,0f,10000f,1000f,1600.f) * this.sign;
+		parent.minY = (posy <= parent.minY) ? posy : parent.minY;
+		parent.maxY = (posy >= parent.maxY) ? posy : parent.maxY;
+		this.position = new PVector(x,posy,0);
+		
+		boolean placeit = false;
+		while(placeit == false) {
+			float radi = 100.f+this.childs.size()+1*10;
+			Optional<knotObject> overlap = parent.knots.stream()
+					.filter(k -> ((Math.abs((this.position.x - k.position.x)) <= (radi + k.rad)) == true) && (k.id != this.id))
+					.filter(k -> ((Math.abs(this.position.y - k.position.y)) <= (radi + k.rad)) == true)
+					.findFirst();
+			if(overlap.isPresent()) {
+				this.position.x -= 100;
 			}
-			if(pos.y - size < k.position.y + k.rad ) {
-			
-				
-			}
-			if(canbeplaced == false) {
-				break;
+			else {
+				placeit = true;
 			}
 		}
-		return canbeplaced;
-	}
-	
-	public void changeposition(float x) {
-		this.position.x=x;
-		this.sign = (0>this.position.y)?-1:1;
-		this.position.y+=this.position.x * 0.01 * this.sign;
+
 		connect();
 		placeCircle();
 	}
+
 	
 	private void placeCircle() {
 		//if only one child = circle not visible
@@ -91,6 +129,7 @@ public class knotObject {
 		}
 		
 	}
+
 	
 	private void connect() {
 		this.knotCol = parent.colors.get(this.id);
@@ -160,6 +199,13 @@ public class knotObject {
 				}
 			}
 		
+	}
+
+	@Override
+	public int compareTo(knotObject k) {
+		if(this.childs.size() > k.childs.size()) return -1;
+		else if(this.childs.size() == k.childs.size()) return 0;
+		else return 1;	
 	}
 	
 

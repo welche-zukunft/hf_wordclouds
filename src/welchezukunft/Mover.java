@@ -98,11 +98,11 @@ public class Mover {
 		 circle.x = pos.x;
 		 circle.y = pos.y;
 		 
-		 if(pos.x > parent.targetplane.width / 2.f) pos.x += r * 1.8;
-		 else if (pos.x < parent.targetplane.width / 2.f) pos.x -= r * 1.8;
+		 if(pos.x > parent.targetplane.width / 2.f) pos.x += r * 1.5;
+		 else if (pos.x < parent.targetplane.width / 2.f) pos.x -= r * 1.5;
 		 
-		 if(pos.y > parent.targetplane.height / 2.f) pos.y += r * 1.9;
-		 else if (pos.y < parent.targetplane.height / 2.f) pos.y -= r * 1.9;
+		 if(pos.y > parent.targetplane.height / 2.f) pos.y += r * 1.5;
+		 else if (pos.y < parent.targetplane.height / 2.f) pos.y -= r * 1.5;
 		 
 		 textposition.x = timeline.lerp(textposition.x,pos.x,0.03f);
 		 textposition.y = timeline.lerp(textposition.y,pos.y,0.03f);
