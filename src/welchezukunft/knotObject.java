@@ -35,19 +35,19 @@ public class knotObject implements Comparable<knotObject>{
 		parent.maxY = (posy >= parent.maxY) ? posy : parent.maxY;
 		this.position = new PVector(x,posy,0);
 		
-		
-		if(parent.knots.size() > 0) {
-			boolean placeit = false;
-			while(placeit == false) {
-				float radi = 100.f+1*10;
-				Optional<knotObject> overlap = parent.knots.stream().filter(k -> (Math.abs((this.position.x - k.position.x)) <= (radi + k.rad)) == true).findFirst();
-				if(overlap.isPresent()) {
-					this.position.x -= 100;
+		synchronized (parent.knots) {
+			if(parent.knots.size() > 0) {
+				boolean placeit = false;
+				while(placeit == false) {
+					float radi = 100.f+1*10;
+					Optional<knotObject> overlap = parent.knots.stream().filter(k -> (Math.abs((this.position.x - k.position.x)) <= (radi + k.rad)) == true).findFirst();
+					if(overlap.isPresent()) {
+						this.position.x -= 100;
+					}
+					else {
+						placeit = true;
+					}
 				}
-				else {
-					placeit = true;
-				}
-				
 			}
 		}
 		this.id = id;
@@ -86,15 +86,17 @@ public class knotObject implements Comparable<knotObject>{
 		boolean placeit = false;
 		while(placeit == false) {
 			float radi = 100.f+this.childs.size()+1*10;
-			Optional<knotObject> overlap = parent.knots.stream()
-					.filter(k -> ((Math.abs((this.position.x - k.position.x)) <= (radi + k.rad)) == true) && (k.id != this.id))
-					.filter(k -> ((Math.abs(this.position.y - k.position.y)) <= (radi + k.rad)) == true)
-					.findFirst();
-			if(overlap.isPresent()) {
-				this.position.x -= 100;
-			}
-			else {
-				placeit = true;
+			synchronized(parent.knots){
+				Optional<knotObject> overlap = parent.knots.stream()
+						.filter(k -> ((Math.abs((this.position.x - k.position.x)) <= (radi + k.rad)) == true) && (k.id != this.id))
+						.filter(k -> ((Math.abs(this.position.y - k.position.y)) <= (radi + k.rad)) == true)
+						.findFirst();
+				if(overlap.isPresent()) {
+					this.position.x -= 100;
+				}
+				else {
+					placeit = true;
+				}
 			}
 		}
 
@@ -134,71 +136,73 @@ public class knotObject implements Comparable<knotObject>{
 	private void connect() {
 		this.knotCol = parent.colors.get(this.id);
 		//get count of appearances 
-		int count = (int) parent.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
-		
-		// get objects with same id
-		Stream<wordObject> testStream = parent.words.stream().filter(wordObject -> wordObject.id == this.id);
-		List<wordObject> testList = testStream.collect(Collectors.toList());
-		
+		synchronized (parent.words) {
+			int count = (int) parent.words.stream().filter(wordObject ->  wordObject.id == this.id).count();
+			// get objects with same id
+			Stream<wordObject> testStream = parent.words.stream().filter(wordObject -> wordObject.id == this.id);
+			List<wordObject> testList = testStream.collect(Collectors.toList());
+
 		// calculate maxCount
 		int maxCount = 0;
+		synchronized(parent.knots){
 		if(parent.knots.size() > 0) {
 			maxCount = parent.knots.stream()
 					.sorted(Comparator.comparing(knotObject::getCount)
 					.reversed())
 					.collect(Collectors.toList()).get(0).childs.size();
-		}
-
-		//calculate alpha
-		float div = (float)this.childs.size() / (float)maxCount;
-		float alp = 60f + parent.parent.map(parent.parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
-		int col = parent.parent.color(parent.parent.red(this.knotCol),parent.parent.green(this.knotCol),parent.parent.blue(this.knotCol),alp);
-
-		//create or shift connections
-		for(wordObject w : testList) {
-				int idFilter = testList.indexOf(w);
-				//do for last object in List
-				if(idFilter == testList.size()-1) {
-					float deltay = this.position.y - w.pos.y;
-					PShape connection = parent.parent.createShape();
-					connection.beginShape();
-					connection.bezierDetail(30);
-					connection.strokeWeight(5);
-					connection.stroke(col);
-					connection.noFill();
-					if(testList.size() < 2) {
-						connection.vertex(w.pos.x,w.pos.y,0);
-						connection.bezierVertex(w.pos.x, w.pos.y, w.pos.x, w.pos.y, w.pos.x,w.pos.y);
+			}
+	
+			//calculate alpha
+			float div = (float)this.childs.size() / (float)maxCount;
+			float alp = 60f + parent.parent.map(parent.parent.lerp(0,(float)maxCount,Ease.quarticIn(div,0.008f)), 0, (float)maxCount, 60, 255);
+			int col = parent.parent.color(parent.parent.red(this.knotCol),parent.parent.green(this.knotCol),parent.parent.blue(this.knotCol),alp);
+			
+			//create or shift connections
+			for(wordObject w : testList) {
+					int idFilter = testList.indexOf(w);
+					//do for last object in List
+					if(idFilter == testList.size()-1) {
+						float deltay = this.position.y - w.pos.y;
+						PShape connection = parent.parent.createShape();
+						connection.beginShape();
+						connection.bezierDetail(30);
+						connection.strokeWeight(5);
+						connection.stroke(col);
+						connection.noFill();
+						if(testList.size() < 2) {
+							connection.vertex(w.pos.x,w.pos.y,0);
+							connection.bezierVertex(w.pos.x, w.pos.y, w.pos.x, w.pos.y, w.pos.x,w.pos.y);
+						}
+						else {
+							connection.vertex(this.position.x,this.position.y,0);
+							connection.bezierVertex(this.position.x, this.position.y - (deltay/1f), w.pos.x, w.pos.y+(deltay/1f), w.pos.x,w.pos.y);
+						}
+						connection.endShape();
+						int childID = parent.connections.getChildCount();
+						this.childs.add(childID);
+						parent.connections.addChild(connection);
 					}
+					//do for all Objects except last object
 					else {
-						connection.vertex(this.position.x,this.position.y,0);
-						connection.bezierVertex(this.position.x, this.position.y - (deltay/1f), w.pos.x, w.pos.y+(deltay/1f), w.pos.x,w.pos.y);
+						PShape curve = parent.connections.getChild(this.childs.get(idFilter));
+						curve.setStroke(col);
+						PVector v1 = curve.getVertex(0);
+						PVector v2 = curve.getVertex(1);
+						PVector v3 = curve.getVertex(2);
+						PVector v4 = curve.getVertex(3);
+						float deltay = this.position.y - w.pos.y;
+						v1 = new PVector(this.position.x,this.position.y,0);
+						v2 = new PVector(this.position.x, this.position.y - (deltay/1f));
+						v3 = new PVector(w.pos.x, w.pos.y+(deltay/1f),0);
+						v4 = new PVector(w.pos.x,w.pos.y,0.f);
+						curve.setVertex(0, v1);
+						curve.setVertex(1, v2);
+						curve.setVertex(2, v3);
+						curve.setVertex(3, v4);	
 					}
-					connection.endShape();
-					int childID = parent.connections.getChildCount();
-					this.childs.add(childID);
-					parent.connections.addChild(connection);
-				}
-				//do for all Objects except last object
-				else {
-					PShape curve = parent.connections.getChild(this.childs.get(idFilter));
-					curve.setStroke(col);
-					PVector v1 = curve.getVertex(0);
-					PVector v2 = curve.getVertex(1);
-					PVector v3 = curve.getVertex(2);
-					PVector v4 = curve.getVertex(3);
-					float deltay = this.position.y - w.pos.y;
-					v1 = new PVector(this.position.x,this.position.y,0);
-					v2 = new PVector(this.position.x, this.position.y - (deltay/1f));
-					v3 = new PVector(w.pos.x, w.pos.y+(deltay/1f),0);
-					v4 = new PVector(w.pos.x,w.pos.y,0.f);
-					curve.setVertex(0, v1);
-					curve.setVertex(1, v2);
-					curve.setVertex(2, v3);
-					curve.setVertex(3, v4);	
 				}
 			}
-		
+		}
 	}
 
 	@Override

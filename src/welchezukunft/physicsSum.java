@@ -31,7 +31,7 @@ public class physicsSum {
 	Attractor a;
 	Random rand;
 	public int maxiMoverCount = 40;
-	public int MoverSize = 20;
+	public int MoverSize = 10;
 	
 	public physicsSum(PApplet parent) {
 		rand = new Random();
@@ -77,25 +77,19 @@ public class physicsSum {
 	public void addMover() {
 		legendInit  = false;
 		removeBodies();
-		
-		List<knotObject> collectKnots = timeline.clouds.stream()
-				.filter(t -> t.knots.size() > 0)
-                .flatMap(wordcloud::getKnots)
-                .collect(Collectors.toList());
-		
-        Collections.sort(collectKnots);
-        
-		
-        int maxParticles = (collectKnots.size() < this.maxiMoverCount ) ? collectKnots.size() : this.maxiMoverCount;
-        
-		for(knotObject k : collectKnots.subList(0, maxParticles)) {
-			if(k.childs.size() > 1) {
-				float radius = k.childs.size() * (float)this.MoverSize;		
-				int color = timeline.workshopColorsBG.get(k.parent.id - 1);
-				movers.add(new Mover(radius,k.word,color,this));
+			List<knotObject> collectKnots = timeline.clouds.stream()
+					.filter(t -> t.knots.size() > 0)
+	                .flatMap(wordcloud::getKnots)
+	                .collect(Collectors.toList());			
+	        Collections.sort(collectKnots);
+	        int maxParticles = (collectKnots.size() < this.maxiMoverCount ) ? collectKnots.size() : this.maxiMoverCount;	        
+			for(knotObject k : collectKnots.subList(0, maxParticles)) {
+				if(k.childs.size() > 1) {
+					float radius = k.childs.size() * (float)this.MoverSize;		
+					int color = timeline.workshopColorsBG.get(k.parent.id - 1);
+					movers.add(new Mover(radius,k.word,color,this));
+				}
 			}
-		}
-
 	}
 	
 	
@@ -156,15 +150,16 @@ public class physicsSum {
 
 	
 	void drawLegend() {
-		List<wordcloud> collectClouds = timeline.clouds.stream()
-				.filter(t -> t.knots.size() > 0)
-				.filter(t -> t.getKnots().anyMatch(w -> w.childs.size() >= 1))
-				.collect(Collectors.toList());
-
+			List<wordcloud> collectClouds = timeline.clouds.stream()
+					.filter(t -> t.knots.size() > 0)
+					.filter(t -> t.getKnots().anyMatch(w -> w.childs.size() >= 1))
+					.collect(Collectors.toList());
+		
 		double maxwidth = Math.ceil(timeline.sqrt(collectClouds.size()));
 		double maxheight = Math.ceil(collectClouds.size() / maxwidth);
 		//System.out.println(maxwidth + "/" + maxheight + "/" + collectClouds.size());
 		legend.beginDraw();
+		legend.clear();
 		double deltax = legend.width/maxwidth;
 		double deltay = legend.height/maxheight;
 		//System.out.println(deltax + "/" + deltay);
@@ -178,8 +173,17 @@ public class physicsSum {
 			legend.noStroke();
 			legend.rect(0, 0, (float) (deltax * 0.8f), (float) (deltay * 0.8f));
 			legend.fill(timeline.workshopColors.get(w.getId()-1));
-			legend.textSize(60 - collectClouds.size() * 4);
-			legend.text(w.name, 10, 10,(float) (deltax * 0.8f) -10, (float) (deltay * 0.8f) -10);
+			
+			legend.textSize(60);	
+			int chars = w.name.length();
+			if(chars > 40) chars = chars / 2;
+			float minTw = (float) ((60 / legend.textWidth(w.name.substring(0,chars))) * (deltax * 0.75f));
+			float minTh = (float) ((60 / (legend.textAscent() + legend.textDescent())) * (deltay * 0.75f));
+			legend.textSize(timeline.min(minTw,minTh));
+			
+			legend.textAlign(PConstants.CENTER,PConstants.CENTER);
+			//legend.text(w.name, 10, 10,(float) (deltax * 0.8f) -10, (float) (deltay * 0.8f) -10);
+			legend.text(w.name, 0,0, (float) (deltax * 0.75f),(float) (deltay * 0.75f));
 			legend.popMatrix();
 		}
 		legend.endDraw();

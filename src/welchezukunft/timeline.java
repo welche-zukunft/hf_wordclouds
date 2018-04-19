@@ -84,7 +84,7 @@ public class timeline extends PApplet{
 	public static int badgeSizeX = 150;
 	public static int badgeSizeY = 70;
 	
-	static int currentCloudid = 0;
+	static int currentCloudid = -1;
 	static int wordFocus = 0;
 	
 	public static eventTimeline eventLine;
@@ -190,26 +190,25 @@ public class timeline extends PApplet{
 	
     	// ---------------SHOW----------------------
     	else if(calibration == false) {	
-    		if(modus == mode.KEYWORDS) {
-			     if(init == true && clouds.size()>0) {
-			    	mainOutput.beginDraw();
-			 	    mainOutput.clear();
-			 	    mainOutput.background(255);
-			 	    mainOutput.hint(DISABLE_DEPTH_TEST); 
-			 	    mainOutput.textFont(menufont);
-			    	 
+    		if(modus == mode.KEYWORDS) {			
+			     if(init == true && clouds.size()>0) { 
+				    mainOutput.beginDraw();
+				 	mainOutput.clear();
+				 	mainOutput.background(255);
+				 	mainOutput.hint(DISABLE_DEPTH_TEST); 
+				 	mainOutput.textFont(menufont); 			  
 				    curCloud = clouds.get(currentCloudid);
-				    
 				    //draw timeline
 				    mainOutput.noStroke();
 				    //near val = 0. :: far val = 1.
 				    float val = (float)(lookat.z -400) / (float)10000;
 				    val = (val > 1.f) ? 1.f : val;
-				    
-			    	if(curCloud.words.size() > 0) {
-			    		newwidthBG = curCloud.words.get(curCloud.words.size()-1).pos.x;
-			    		newheightBG = 500 + (val * 12000f); 
-			    	}
+				    synchronized (curCloud.words) {
+				    	if(curCloud.words.size() > 0) {
+				    		newwidthBG = curCloud.words.get(curCloud.words.size()-1).pos.x;
+				    		newheightBG = 500 + (val * 12000f); 
+				    	}
+				    }
 			    	widthBG = lerp(widthBG,newwidthBG,0.15f);
 			    	heightBG = lerp(heightBG,newheightBG,0.15f);
 			    	mainOutput.pushMatrix();
@@ -226,23 +225,25 @@ public class timeline extends PApplet{
 			    	
 			    	//calculate focus position 
 			    	//center of wordcloud or focused word
-					if(curCloud.words.size() > 0){
-						if(wordFocus > curCloud.words.size() -1) {
-							wordFocus = curCloud.words.size()-1;
+			    	synchronized (curCloud.words) {
+						if(curCloud.words.size() > 0){
+							if(wordFocus > curCloud.words.size() -1) {
+								wordFocus = curCloud.words.size()-1;
+							}
+							if(showall == false) {
+								curCloud.lastObjectPosition = curCloud.words.get(wordFocus).pos;
+							}
+							else if(showall == true) {
+								float xStart = curCloud.words.get(0).pos.x;
+				    			float xEnd = curCloud.words.get(curCloud.words.size()-1).pos.x;
+					    		float posx = xStart + (float)0.5 * (xEnd - xStart);
+					    		float yStart = curCloud.minY;
+				    			float yEnd = curCloud.maxY;
+				    			float posy = yStart + (float)0.5 * (yEnd - yStart);
+				    			curCloud.lastObjectPosition = new PVector(posx,posy,0);
+							}
 						}
-						if(showall == false) {
-							curCloud.lastObjectPosition = curCloud.words.get(wordFocus).pos;
-						}
-						else if(showall == true) {
-							float xStart = curCloud.words.get(0).pos.x;
-			    			float xEnd = curCloud.words.get(curCloud.words.size()-1).pos.x;
-				    		float posx = xStart + (float)0.5 * (xEnd - xStart);
-				    		float yStart = curCloud.minY;
-			    			float yEnd = curCloud.maxY;
-			    			float posy = yStart + (float)0.5 * (yEnd - yStart);
-			    			curCloud.lastObjectPosition = new PVector(posx,posy,0);
-						}
-					}
+			    	}
 				
 					//generating camera view
 			    	lookat.x = lerp(lookat.x,curCloud.lastObjectPosition.x,(float)0.15);
@@ -259,88 +260,100 @@ public class timeline extends PApplet{
 					mainOutput.shape(curCloud.wordCloud);
 			    	mainOutput.popMatrix();
 					
-
 			    	//draw text on knots
-			    	for(knotObject k : curCloud.knots) {
-			    		if(k.childs.size() > 1) {
-			    			 if(in_frustum(k.position,mainOutput) == true) {
-				    			 mainOutput.pushMatrix();
-				    			 PVector textPos = new PVector();
-				    			 mainOutput.translate(k.position.x,k.position.y,0);
-				    			 mainOutput.translate(textPos.x,textPos.y,0);
-				    			 mainOutput.fill(0);
-				    			 mainOutput.textAlign(LEFT, CENTER);
-				    			 float tsize = 60 + 5 * k.childs.size() + (100 * val);	
-				    			 mainOutput.textSize(tsize);
-				    			 float gap = mainOutput.textDescent();
-				    			 int wi = ceil(mainOutput.textWidth(k.word));
-				    			 int hi = ceil(mainOutput.textAscent()+mainOutput.textDescent()+tsize);
-				    			 if(k.sign == -1) gap = mainOutput.textAscent() * -1.f;
-				    			 //mainOutput.translate(hi/2 * k.sign, 0);
-				    			 mainOutput.rotateZ(radians(90) * k.sign);
-				    			 mainOutput.translate(k.rad * 1.2f,0);
-				    			 mainOutput.text(k.word,0,0);//gap + 1.2f*(k.rad * k.sign)); 
-				    			 mainOutput.popMatrix();
-				    		 }
-			    		}	
+			    	synchronized (curCloud.knots) {
+				    	for(knotObject k : curCloud.knots) {
+				    		if(k.childs.size() > 1) {
+				    			 if(in_frustum(k.position,mainOutput) == true) {
+					    			 mainOutput.pushMatrix();
+					    			 PVector textPos = new PVector();
+					    			 mainOutput.translate(k.position.x,k.position.y,0);
+					    			 mainOutput.translate(textPos.x,textPos.y,0);
+					    			 mainOutput.fill(0);
+					    			 mainOutput.textAlign(LEFT, CENTER);
+					    			 float tsize = 60 + 5 * k.childs.size() + (100 * val);	
+					    			 mainOutput.textSize(tsize);
+					    			 float gap = mainOutput.textDescent();
+					    			 int wi = ceil(mainOutput.textWidth(k.word));
+					    			 int hi = ceil(mainOutput.textAscent()+mainOutput.textDescent()+tsize);
+					    			 if(k.sign == -1) gap = mainOutput.textAscent() * -1.f;
+					    			 //mainOutput.translate(hi/2 * k.sign, 0);
+					    			 mainOutput.rotateZ(radians(90) * k.sign);
+					    			 mainOutput.translate(k.rad * 1.2f,0);
+					    			 mainOutput.text(k.word,0,0);//gap + 1.2f*(k.rad * k.sign)); 
+					    			 mainOutput.popMatrix();
+					    		 }
+				    		}	
+				    	}
 			    	}
-			    	
 			    	   	
 			    	float scl = 1f;
-
 			    	//init FX - only in realtime modus / not on setup
 			    	if(init == true) {
-				    	for(wordObject w : curCloud.words){
-							if(w.init > 0.) {
-								mainOutput.pushMatrix();			
-								mainOutput.translate(w.pos.x,w.pos.y,0);
-								float scaleF = (float)1.+ 0.2f*(1.f - w.init);
-								mainOutput.scale(scaleF);
+			    		synchronized (curCloud.words) {
+					    	for(wordObject w : curCloud.words){
+								if(w.init > 0.) {
+									mainOutput.pushMatrix();			
+									mainOutput.translate(w.pos.x,w.pos.y,0);
+									float scaleF = (float)1.+ 0.2f*(1.f - w.init);
+									mainOutput.scale(scaleF);
+		
+									mainOutput.textAlign(CENTER, CENTER);
+									mainOutput.textSize(60);
+									
+									float wi = mainOutput.textWidth(w.word);
+									float hi = mainOutput.textAscent() + mainOutput.textDescent() + 60;
+									mainOutput.fill(255,255*(w.init));
+									mainOutput.noStroke();
+									mainOutput.rect(-1 * wi/2, -1 * hi/2, wi, hi);
+									
+									mainOutput.fill(0,255*(w.init));
+									mainOutput.text(w.word,0,0);
 	
-								mainOutput.textAlign(CENTER, CENTER);
-								mainOutput.textSize(60);
-								
-								float wi = mainOutput.textWidth(w.word);
-								float hi = mainOutput.textAscent() + mainOutput.textDescent() + 60;
-								mainOutput.fill(255,255*(w.init));
-								mainOutput.noStroke();
-								mainOutput.rect(-1 * wi/2, -1 * hi/2, wi, hi);
-								
-								mainOutput.fill(0,255*(w.init));
-								mainOutput.text(w.word,0,0);
-
-								mainOutput.popMatrix();
-								w.init -= 0.008;
-							}
-				    	}
+									mainOutput.popMatrix();
+									w.init -= 0.008;
+								}
+					    	}
+			    		}
 			    	}
 					
 			    	//draw text on visible object
-					for(wordObject w : curCloud.words){
-					  if(in_frustum(w.pos,mainOutput) == true && showall == false && lookat.z < 405) {	
-							  mainOutput.pushMatrix();	
-							  mainOutput.textSize(18);
-							  mainOutput.textAlign(LEFT,TOP);
-							  float alp = 1 - (0.1f * (lookat.z - 400));
+			    	synchronized (curCloud.words) {
+						for(wordObject w : curCloud.words){
+						  if(in_frustum(w.pos,mainOutput) == true && showall == false && lookat.z < 405) {	
+								  mainOutput.pushMatrix();	
+								  mainOutput.textSize(18);
 
-							  float timeX = (w.pos.x > 10000) ? 10000 : w.pos.x;
-							  int col = getFontColor(timeX / 10000.f);
-							  mainOutput.fill(col,255*alp);
+							      int chars = w.word.length();
+								  if(chars > 20) chars = chars / 2;
+								  float minTw = (float) ((18 / mainOutput.textWidth(w.word.substring(0,chars))) * (badgeSizeX * 0.9));
+							      float minTh = (float) ((18 / (mainOutput.textAscent() + mainOutput.textDescent())) * (badgeSizeY*0.9));
+								  mainOutput.textSize(min(minTw,minTh));
+								  
+								  mainOutput.textAlign(CENTER,CENTER);
+								  float alp = 1 - (0.1f * (lookat.z - 400));
+	
+								  float timeX = (w.pos.x > 10000) ? 10000 : w.pos.x;
+								  int colBG = curCloud.colors.get(w.id);  
+								  //int col = getFontColor(timeX / 10000.f);
+								  int col = getFontColorbasedonBG((int)red(colBG),(int)green(colBG),(int)blue(colBG));
+								  mainOutput.fill(col,255*alp);
+								  mainOutput.translate(w.pos.x, w.pos.y,0);
+								  mainOutput.text(w.word, -1.f * (this.badgeSizeX/2f), -1.f * (this.badgeSizeY/2f),badgeSizeX,badgeSizeY);
+								  mainOutput.popMatrix();
+						  		}
+						  if(wordFocus == curCloud.words.indexOf(w) && showall == false && automodus == false) {
+							  mainOutput.pushMatrix();
 							  mainOutput.translate(w.pos.x, w.pos.y,0);
-							  mainOutput.text(w.word, -1.f * (this.badgeSizeX/2f), -1.f * (this.badgeSizeY/2f),badgeSizeX,badgeSizeY);
+							  mainOutput.translate(-1.2f * (this.badgeSizeX / 2f), 0);
+							  mainOutput.rotate(radians(90));
+							  mainOutput.fill(0);
+							  mainOutput.scale((float) 0.6);
+							  mainOutput.shape(triangle);
 							  mainOutput.popMatrix();
-					  		}
-					  if(wordFocus == curCloud.words.indexOf(w) && showall == false && automodus == false) {
-						  mainOutput.pushMatrix();
-						  mainOutput.translate(w.pos.x, w.pos.y,0);
-						  mainOutput.translate(-1.2f * (this.badgeSizeX / 2f), 0);
-						  mainOutput.rotate(radians(90));
-						  mainOutput.fill(0);
-						  mainOutput.scale((float) 0.6);
-						  mainOutput.shape(triangle);
-						  mainOutput.popMatrix();
-					  }
-					 }
+						  }
+						 }
+			    	}
 									
 					mainOutput.endDraw();
 					
@@ -408,85 +421,96 @@ public class timeline extends PApplet{
 					if(showall == false) {
 						//show current postion with TRIANGLE
 						float newposTRI = 1;
-						if(clouds.get(currentCloudid).words.get(wordFocus).overtime == false) {
-							newposTRI = (float)clouds.get(currentCloudid).words.get(wordFocus).pos.x / (float)clouds.get(currentCloudid).sizex;
-						}
-						posTRI = lerp(posTRI,newposTRI,0.3f);
-						float trianglePosition = 50 + (posTRI * (wordcloudstatus.width-100));
-						if(clouds.get(currentCloudid).words.get(wordFocus).overtime == true) {
-							//display overttime badge
-							wordcloudstatus.noStroke();
-							wordcloudstatus.fill(255,0,0);
-							wordcloudstatus.rect(1870, 15, 50, 35);
-							wordcloudstatus.fill(255);
-							wordcloudstatus.textAlign(CENTER,CENTER);
-							wordcloudstatus.textSize(20);
-							wordcloudstatus.text("OT", 1895, 25);
-							trianglePosition = 1895;
-						}
+						synchronized (clouds.get(currentCloudid).words) {
+							if(clouds.get(currentCloudid).words.get(wordFocus).overtime == false) {
+								newposTRI = (float)clouds.get(currentCloudid).words.get(wordFocus).pos.x / (float)clouds.get(currentCloudid).sizex;
+							}
+							posTRI = lerp(posTRI,newposTRI,0.3f);
+							float trianglePosition = 50 + (posTRI * (wordcloudstatus.width-100));
+							if(clouds.get(currentCloudid).words.get(wordFocus).overtime == true) {
+								//display overttime badge
+								wordcloudstatus.noStroke();
+								wordcloudstatus.fill(255,0,0);
+								wordcloudstatus.rect(1870, 15, 50, 35);
+								wordcloudstatus.fill(255);
+								wordcloudstatus.textAlign(CENTER,CENTER);
+								wordcloudstatus.textSize(20);
+								wordcloudstatus.text("OT", 1895, 25);
+								trianglePosition = 1895;
+							}
 						wordcloudstatus.pushMatrix();
 						wordcloudstatus.translate(trianglePosition, 30);
 						wordcloudstatus.fill(255);
 						wordcloudstatus.shape(triangle);
 						wordcloudstatus.popMatrix();
+						}
 						//display current keyword
 						wordcloudstatus.textSize(25);
 						wordcloudstatus.fill(255);
-						int timeinsec = clouds.get(currentCloudid).words.get(wordFocus).time - clouds.get(currentCloudid).starttime;
-						int mins = floor(timeinsec / 60);
-						int secs = timeinsec - (mins*60);
-						String timeText = "time -> " + String.format("%02d", mins) + ":" + String.format("%02d", secs);
-						if(clouds.get(currentCloudid).words.get(wordFocus).overtime == true) {
-							timeText = timeText.concat(" (OT)");
+						synchronized (clouds.get(currentCloudid).words) {
+							int timeinsec = clouds.get(currentCloudid).words.get(wordFocus).time - clouds.get(currentCloudid).starttime;
+							int mins = floor(timeinsec / 60);
+							int secs = timeinsec - (mins*60);
+							String timeText = "time -> " + String.format("%02d", mins) + ":" + String.format("%02d", secs);
+							if(clouds.get(currentCloudid).words.get(wordFocus).overtime == true) {
+								timeText = timeText.concat(" (OT)");
+							}
+							wordcloudstatus.textAlign(LEFT, TOP);
+							wordcloudstatus.text(clouds.get(currentCloudid).words.get(wordFocus).word, 50, 80);
+							wordcloudstatus.text(timeText, 50, 120);
 						}
-						wordcloudstatus.textAlign(LEFT, TOP);
-						wordcloudstatus.text(clouds.get(currentCloudid).words.get(wordFocus).word, 50, 80);
-						wordcloudstatus.text(timeText, 50, 120);
 					}	
 					
 					//draw top3
 					else if (showall == true) {
 						//sort knots
-						List<knotObject> sortedKnots = clouds.get(currentCloudid).knots.stream()
-								.sorted(Comparator.comparing(knotObject -> knotObject.childs.size()))
-								.collect(Collectors.toList());
-						//check if less than 3 knots
-						int top = 3;
-						int maxiChilds = sortedKnots.get(sortedKnots.size()-1).getCount();
-						top = (sortedKnots.size() > top) ? top : sortedKnots.size();
-						//start draw top3-stat
-						
-						wordcloudstatus.pushMatrix();
-						wordcloudstatus.translate(850,260);
-						wordcloudstatus.rotate(radians(90)*-1.f);
-						wordcloudstatus.fill(255);
-						wordcloudstatus.textSize(40);
-						wordcloudstatus.text("TOP 3", 0, 0);
-						wordcloudstatus.popMatrix();
-						
-						wordcloudstatus.pushMatrix();
-						wordcloudstatus.translate(1020,70);
-						for(int i = 0; i < top; i++) {
-							int pos = sortedKnots.size() - 1 - i;
-							if(sortedKnots.get(pos).childs.size() > 1) {
-								int count = sortedKnots.get(pos).getCount();
-								//parent.colors.get(this.id
-								int col = sortedKnots.get(pos).parent.colors.get(sortedKnots.get(pos).id);
-								String word = sortedKnots.get(pos).word;
-								wordcloudstatus.fill(col);
-								wordcloudstatus.noStroke();
-								float sizeCir = 150 * ((float)count / (float)maxiChilds);
-								wordcloudstatus.ellipse(150,135,sizeCir,sizeCir);
-								wordcloudstatus.textAlign(LEFT,TOP);
-								wordcloudstatus.fill(255);
-								wordcloudstatus.textSize(25);
-								wordcloudstatus.text(word,0,20,300,105);
-								wordcloudstatus.text(count + " x",230,190);
-								wordcloudstatus.translate(300, 0);
+						synchronized(clouds.get(currentCloudid).knots) {
+							List<knotObject> sortedKnots = clouds.get(currentCloudid).knots.stream()
+									.sorted(Comparator.comparing(knotObject -> knotObject.childs.size()))
+									.collect(Collectors.toList());
+							//check if less than 3 knots
+							int top = 3;
+							int maxiChilds = sortedKnots.get(sortedKnots.size()-1).getCount();
+							top = (sortedKnots.size() > top) ? top : sortedKnots.size();
+							//start draw top3-stat
+							
+							wordcloudstatus.pushMatrix();
+							wordcloudstatus.translate(850,260);
+							wordcloudstatus.rotate(radians(90)*-1.f);
+							wordcloudstatus.fill(255);
+							wordcloudstatus.textSize(40);
+							wordcloudstatus.text("TOP 3", 0, 0);
+							wordcloudstatus.popMatrix();
+							
+							wordcloudstatus.pushMatrix();
+							wordcloudstatus.translate(1020,70);
+							for(int i = 0; i < top; i++) {
+								int pos = sortedKnots.size() - 1 - i;
+								if(sortedKnots.get(pos).childs.size() > 1) {
+									int count = sortedKnots.get(pos).getCount();
+									//parent.colors.get(this.id
+									int col = sortedKnots.get(pos).parent.colors.get(sortedKnots.get(pos).id);
+									String word = sortedKnots.get(pos).word;
+									wordcloudstatus.fill(col);
+									wordcloudstatus.noStroke();
+									float sizeCir = 150 * ((float)count / (float)maxiChilds);
+									wordcloudstatus.ellipse(150,135,sizeCir,sizeCir);
+									wordcloudstatus.textAlign(LEFT,TOP);
+									wordcloudstatus.fill(255);
+									wordcloudstatus.textSize(25);
+									wordcloudstatus.text(word,0,20,300,105);
+									float tw = wordcloudstatus.textWidth(word);
+									
+									wordcloudstatus.strokeWeight(3);
+									wordcloudstatus.stroke(70);
+									wordcloudstatus.line(tw*0.666f, 20 + 35, 150, 135);
+									wordcloudstatus.ellipse(150,135,5,5);
+									wordcloudstatus.text(count + " x",230,190);
+									wordcloudstatus.translate(300, 0);
+								}
 							}
+							wordcloudstatus.popMatrix();
 						}
-						wordcloudstatus.popMatrix();
-					
 					}
 					wordcloudstatus.endDraw();
 					image(wordcloudstatus,1920,720,wordcloudstatus.width,wordcloudstatus.height);					
@@ -732,32 +756,37 @@ public class timeline extends PApplet{
 	 
     public static void zoomIn() {
     	//zoom near
-    	zPos = 400;
-		showall = false;
+    	if(currentCloudid >= 0) {
+    		zPos = 400;
+			showall = false;
+    	}
     }
     
     public static void zoomOut() {
-    	curCloud = clouds.get(currentCloudid);
-	    //show all
-		if(curCloud.words.size() > 1) {
-			showall = true;
-			
-			float xStart = curCloud.words.get(0).pos.x;
-			float xEnd = curCloud.words.get(curCloud.words.size()-1).pos.x;
-			if(xStart == xEnd) xEnd += 100;
-			
-			float yStart = abs(curCloud.minY);
-			float yEnd = curCloud.maxY;	
+    	if(currentCloudid >= 0) {
+	    	curCloud = clouds.get(currentCloudid);
+		    //show all
+	    	synchronized (curCloud.words) {
+				if(curCloud.words.size() > 1) {
+					showall = true;			
+					float xStart = curCloud.words.get(0).pos.x;
+					float xEnd = curCloud.words.get(curCloud.words.size()-1).pos.x;
+					if(xStart == xEnd) xEnd += 100;
+					
+					float lenFac = 1.f - ((xEnd - xStart) / 10000.f);
+					lenFac = (lenFac < 0.f) ? 0.f : lenFac;
+					
+					float radAngle = radians(fovy);
+					float radHFOV = 2f * atan(tan(radAngle / 2f) * aspect);
+					float fovx = degrees(radHFOV);
+					
+					float distancex = 1f/(2f * (float)tan((fovx/2f)/(float)(xEnd-xStart)));
+					float distancey = 1f/(2f * tan((fovy/2)/(curCloud.maxY*1.05f-curCloud.minY*1.05f)));
 	
-			float radAngle = radians(fovy);
-			float radHFOV = 2f * atan(tan(radAngle / 2f) * aspect);
-			float fovx = degrees(radHFOV);
-			
-			float distancex = 1f/(2f * (float)tan((fovx/2f)/(float)(xEnd-xStart)));
-			float distancey = 1f/(2f * tan((fovy/2)/(curCloud.maxY*1.05f-curCloud.minY*1.05f)));
-			
-			zPos = Math.max(distancex * 1.7778f, distancey * 1.2f);
-		}
+					zPos = Math.max(distancex * 1.9f, distancey * (1.4f + lenFac));
+				}
+	    	}
+    	}
     }
     
     static boolean in_frustum(PVector pos,PGraphics target) {
@@ -850,5 +879,16 @@ public class timeline extends PApplet{
     	return d;
     }
     
+    private int getFontColorbasedonBG(int R, int G, int B) {
+
+    	int d = 0;
+ 	    // Counting the perceptive luminance - human eye favors green color... 
+ 	    double a = 1 - (0.299 * (float)R + 0.587 * (float)G + 0.114 * (float)B)/255;
+ 	    if (a < 0.186)
+ 	       d = 0; // bright colors - black font
+ 	    else
+ 	       d = 255; // dark colors - white font
+    	return d;
+    }
     
 }

@@ -85,7 +85,6 @@ public class calibrationGui {
 		}
 
 		void saver(){
-
 		  json = new JSONObject();
 		  for(int i = 0; i < label.length; i ++){
 		    json.setInt(label[i],vals[i]);

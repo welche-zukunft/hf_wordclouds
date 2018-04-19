@@ -56,8 +56,9 @@ public class wordcloud {
 		this.parent = parent;
 		this.id = id;
 		this.setColorGrad();
-		words = Collections.synchronizedList(new CopyOnWriteArrayList<wordObject>());
-	    knots = Collections.synchronizedList(new CopyOnWriteArrayList<knotObject>());
+		//words = Collections.synchronizedList(new CopyOnWriteArrayList<wordObject>());
+		words = Collections.synchronizedList(new ArrayList<wordObject>());
+	    knots = Collections.synchronizedList(new ArrayList<knotObject>());
 	    colors = new ArrayList<Integer>();
 	    wordCountperSentence = new ArrayList<sentence>();
 	
@@ -68,7 +69,7 @@ public class wordcloud {
 	}
 	
 	private void setColorGrad() {
-		System.out.println(this.id);
+		//System.out.println(this.id);
 		this.r1 = timeline.colorGradients.get(this.id-1).getR1();
 		this.r2 = timeline.colorGradients.get(this.id-1).getR2();
 		this.g1 = timeline.colorGradients.get(this.id-1).getG1();
@@ -76,8 +77,7 @@ public class wordcloud {
 		this.b1 = timeline.colorGradients.get(this.id-1).getB1();
 		this.b2 = timeline.colorGradients.get(this.id-1).getB2();
 		this.fc1 = timeline.colorGradients.get(this.id-1).getFc1();
-		this.fc2 = timeline.colorGradients.get(this.id-1).getFc2();
-		
+		this.fc2 = timeline.colorGradients.get(this.id-1).getFc2();		
 	}
 	
 	
@@ -112,61 +112,64 @@ public class wordcloud {
 		}
 		
 		int countinsentence = wordCountperSentence.stream().filter(sentence -> sentence.getSentence_id() == sentenceId).findFirst().get().getCount();
-
-		//if first word set starttime
-		if(this.words.size() == 0) {
-			this.starttime = time;
+		
+		synchronized(words){
+			//if first word set starttime
+			if(this.words.size() == 0) {
+				this.starttime = time;
+			}
 		}
 
 		//check if word was already used
-		Optional<knotObject> currentKnot = this.knots.stream()
-		        .filter(knotObject -> knotObject.word.equalsIgnoreCase(text))
-		        .findFirst();
+		synchronized(this.knots) {
+			Optional<knotObject> currentKnot = this.knots.stream()
+			        .filter(knotObject -> knotObject.word.equalsIgnoreCase(text))
+			        .findFirst();
 	
-		
-		// new word = new knot	
-		if(currentKnot.isPresent() == false) {
-			newWord = true;
-			//running time in seconds
-			float seconds = time - this.starttime;
-			float tposition = (float)seconds/(float)(timeline.speaktime*60); 
-			if(tposition > 1.f) {
-				overtime = true;
-				tposition = 1.f;
+			// new word = new knot	
+			if(currentKnot.isPresent() == false) {
+				newWord = true;
+				//running time in seconds
+				float seconds = time - this.starttime;
+				float tposition = (float)seconds/(float)(timeline.speaktime*60); 
+				if(tposition > 1.f) {
+					overtime = true;
+					tposition = 1.f;
+				}
+				int color = this.getColor(tposition);
+				this.colors.add(color);
+				knotid = this.knots.size();
+	
+				//create word
+				createWord(fx,text,time,knotid,countinsentence,overtime);
+				//generate new knotObject at position
+	
+				this.knots.add(new knotObject(this.lastposX,this.knots.size(),text,this));		
 			}
-			int color = this.getColor(tposition);
-			this.colors.add(color);
-			knotid = this.knots.size();
-
-			//create word
-			createWord(fx,text,time,knotid,countinsentence,overtime);
-			//generate new knotObject at position
-
-			this.knots.add(new knotObject(this.lastposX,this.knots.size(),text,this));
 			
-		}
-		
-		// used word = no new knot
-		else if(currentKnot.isPresent() == true) {
-			knotid = currentKnot.get().id;
-			float seconds = time - this.starttime;
-			float tposition = (float)seconds/(float)(timeline.speaktime*60); 
-			if(tposition > 1.f) {
-				overtime = true;
+			// used word = no new knot
+			else if(currentKnot.isPresent() == true) {
+				knotid = currentKnot.get().id;
+				float seconds = time - this.starttime;
+				float tposition = (float)seconds/(float)(timeline.speaktime*60); 
+				if(tposition > 1.f) {
+					overtime = true;
+				}
+				//create word
+				createWord(fx,text,time,knotid,countinsentence,overtime);
+				//repos & recalc connection
+				currentKnot.get().changeposition(this.lastposX);
+				float newposy = currentKnot.get().position.y;
+				this.minY = (newposy <= this.minY) ? newposy : this.minY;
+				this.maxY = (newposy >= this.maxY) ? newposy : this.maxY;
 			}
-			//create word
-			createWord(fx,text,time,knotid,countinsentence,overtime);
-			//repos & recalc connection
-			currentKnot.get().changeposition(this.lastposX);
-			float newposy = currentKnot.get().position.y;
-			this.minY = (newposy <= this.minY) ? newposy : this.minY;
-			this.maxY = (newposy >= this.maxY) ? newposy : this.maxY;
-		}
+		}	
 		
 		//focus to new object
-		timeline.wordFocus = this.words.size()-1;
-		timeline.currentCloudid = timeline.clouds.indexOf(this);
-		
+		synchronized(words){
+			timeline.wordFocus = this.words.size()-1;
+		}
+		timeline.currentCloudid = timeline.clouds.indexOf(this);		
 	}
 	
 	private void createWord(boolean fx, String text, int time, int knotid, int countinsentence,boolean overtime) {
@@ -181,7 +184,9 @@ public class wordcloud {
 			fxVal = 0.0f;
 		}
 		wordObject new1 = new wordObject(text,pos,knotid,fxVal,time,overtime,this);
-		this.words.add(new1);
+		synchronized(this.words){
+			this.words.add(new1);
+		}
 		this.lastposX = movex;
 	}
 	
@@ -194,7 +199,9 @@ public class wordcloud {
 	}
 	
 	public Stream<knotObject> getKnots() {
-		return knots.stream().filter(k -> k.childs.size() > 1);
+		synchronized(this.knots) {
+		 return this.knots.stream().filter(k -> k.childs.size() > 1);
+		}
 	}
 
 }

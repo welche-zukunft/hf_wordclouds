@@ -590,8 +590,10 @@ void createMainGui(){
         	   timeline.zoomOut();
            }
            else if(timeline.showall == false) {
-        	   timeline.wordFocus = timeline.clouds.get(timeline.currentCloudid).words.size()-1;
-        	   timeline.zoomIn();
+        	   synchronized (timeline.clouds.get(timeline.currentCloudid).words) {
+	        	   timeline.wordFocus = timeline.clouds.get(timeline.currentCloudid).words.size()-1;
+	        	   timeline.zoomIn();
+        	   }
            }   
        }
    });
@@ -605,17 +607,23 @@ void createMainGui(){
    //add navigation buttons for keywords
    JPanel keywordnavigation = new JPanel();
    keywordnavigation.setLayout(experimentLayout);
+   
    //zoom in
    JButton zoomin = new JButton("zoom in");
    zoomin.addActionListener(new ActionListener()
      {
        public void actionPerformed(ActionEvent e)
        {
-    	   timeline.wordFocus = timeline.clouds.get(timeline.currentCloudid).words.size()-1;
-    	   timeline.zoomIn();
+    	   if(timeline.currentCloudid >= 0) {
+	    	   synchronized (timeline.clouds.get(timeline.currentCloudid).words) {
+	    		   timeline.wordFocus = timeline.clouds.get(timeline.currentCloudid).words.size()-1;
+	    	   	   timeline.zoomIn();
+	    	   }
+    	   }
        }
      });
    keywordnavigation.add(zoomin);
+   
    // zoom out
    JButton zoomout = new JButton("zoom out");
    zoomout.addActionListener(new ActionListener()
@@ -626,28 +634,37 @@ void createMainGui(){
        }
      });
    keywordnavigation.add(zoomout);
+   
    //next
    JButton nextObject = new JButton("focus +");
    nextObject.addActionListener(new ActionListener()
      {
        public void actionPerformed(ActionEvent e)
        {
-   		 timeline.wordFocus = timeline.wordFocus + 1;
-   		 if(timeline.wordFocus > timeline.curCloud.words.size()-1) timeline.wordFocus = 0;
-   		 timeline.automodus = false;
-   		}
+    	   if(timeline.currentCloudid >= 0) {  
+	   		 timeline.wordFocus = timeline.wordFocus + 1;
+	   		 synchronized (timeline.curCloud.words) {
+		   		 if(timeline.wordFocus > timeline.curCloud.words.size()-1) timeline.wordFocus = 0;
+		   		 timeline.automodus = false;
+	   			}
+	   		}
+       }
      });
    keywordnavigation.add(nextObject);
    
-   // zoom out
+   // last
    JButton prevObject = new JButton("focus -");
    prevObject.addActionListener(new ActionListener()
      {
        public void actionPerformed(ActionEvent e)
        {
-    	timeline.wordFocus = timeline.wordFocus - 1;
-   		if(timeline.wordFocus < 0) timeline.wordFocus = timeline.curCloud.words.size()-1;
-   		timeline.automodus = false;
+    	   if(timeline.currentCloudid >= 0) {	
+    	    timeline.wordFocus = timeline.wordFocus - 1;
+	    	synchronized (timeline.curCloud.words) {
+		   		if(timeline.wordFocus < 0) timeline.wordFocus = timeline.curCloud.words.size()-1;
+		   		timeline.automodus = false;
+	    		}
+    	   }
        }
      });
    keywordnavigation.add(prevObject);  
@@ -686,7 +703,7 @@ void createMainGui(){
 
    // Spinner
    SpinnerModel MovCount = new SpinnerNumberModel(40, 0, 100, 1);
-   SpinnerModel MovSize = new SpinnerNumberModel(20, 0, 100, 1);
+   SpinnerModel MovSize = new SpinnerNumberModel(10, 0, 100, 1);
    
    JSpinner mcount = new JSpinner(MovCount);
    JSpinner msize = new JSpinner(MovSize);

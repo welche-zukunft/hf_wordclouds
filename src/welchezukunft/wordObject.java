@@ -6,7 +6,9 @@ public class wordObject {
 
 	String word;
 	PVector pos;
+	//knot id
 	int id;
+	
 	wordcloud parent;
 	float init;
 	int time;
