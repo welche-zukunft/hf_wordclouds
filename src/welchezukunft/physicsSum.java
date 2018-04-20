@@ -33,6 +33,8 @@ public class physicsSum {
 	public int maxiMoverCount = 40;
 	public int MoverSize = 10;
 	
+	
+	
 	public physicsSum(PApplet parent) {
 		rand = new Random();
 		this.parent = parent;
@@ -40,7 +42,7 @@ public class physicsSum {
 		allplane = parent.createGraphics(3840,1080,PConstants.P2D);
 		textplane = parent.createGraphics(3840,1080,PConstants.P2D);
 		
-		legend = parent.createGraphics(1920,360,PConstants.P2D);
+		legend = parent.createGraphics(300,720,PConstants.P2D);
 		
 		circleShader = parent.loadShader("./resources/shader/circle.glsl");
 		blur = parent.loadShader("./resources/shader/blur.glsl");
@@ -150,6 +152,46 @@ public class physicsSum {
 
 	
 	void drawLegend() {
+		List<wordcloud> collectClouds = timeline.clouds.stream()
+				.filter(t -> t.knots.size() > 0)
+				.filter(t -> t.getKnots().anyMatch(w -> w.childs.size() >= 1))
+				.collect(Collectors.toList());
+		
+		int count = collectClouds.size();
+		float deltay = 680 / 13;
+		legend.beginDraw();
+		legend.clear();
+		legend.fill(255,210);
+		legend.rect(0, 0, 300 , count * deltay);
+		legend.translate(0,20);
+		for(wordcloud w : collectClouds) {
+			legend.pushMatrix();
+			legend.translate(20, collectClouds.indexOf(w)*deltay );
+			legend.fill(timeline.workshopColorsBG.get(w.getId()-1));
+			legend.noStroke();
+			legend.rect(0, 0, 260, deltay - 20);
+			legend.fill(timeline.workshopColors.get(w.getId()-1));
+			legend.textSize(30);	
+			int chars = w.name.length();
+			if(chars > 30) chars = chars / 2;
+			float minTw = (float) ((30 / legend.textWidth(w.name.substring(0,chars))) * (240f));
+			float minTh = (float) ((30 / (legend.textAscent() + legend.textDescent())) * (deltay-40));
+			legend.textSize(timeline.min(minTw,minTh));
+			legend.textAlign(PConstants.CENTER,PConstants.CENTER);
+			legend.text(w.name, 0,0,240,deltay / 2.f);
+			legend.popMatrix();
+			
+		}
+
+		legend.endDraw();
+		legendInit = true;
+		
+	}
+	
+	
+	
+	/*
+	void drawLegend() {
 			List<wordcloud> collectClouds = timeline.clouds.stream()
 					.filter(t -> t.knots.size() > 0)
 					.filter(t -> t.getKnots().anyMatch(w -> w.childs.size() >= 1))
@@ -189,6 +231,7 @@ public class physicsSum {
 		legend.endDraw();
 		legendInit = true;
 	}
+	*/
 	
 	
 }

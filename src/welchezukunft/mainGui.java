@@ -668,7 +668,21 @@ void createMainGui(){
        }
      });
    keywordnavigation.add(prevObject);  
+  
+   // show top 3
+   JButton top3 = new JButton("top3onoff");
+   top3.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    	   if(timeline.showall == true) {	
+    		   timeline.top3 = (timeline.top3 == 0) ? 1 : 0;
+    	   }
+       }
+     });
+   keywordnavigation.add(top3);  
    mainPanelGui2.add(keywordnavigation);
+   
    
    //sum panel --------------------------------------------------------------------------------------------------------------
    //add navigation buttons for keywords
@@ -726,6 +740,19 @@ void createMainGui(){
        }
      });
    sumUI.add(redraw);
+   
+// show top 3
+   JButton legend = new JButton("legendonoff");
+   legend.addActionListener(new ActionListener()
+     {
+       public void actionPerformed(ActionEvent e)
+       {
+    		   timeline.legendposition = (timeline.legendposition == 0) ? 1 : 0;
+       }
+     });
+   sumUI.add(legend);  
+   
+   
    
    mainPanelGui3.add(sumUI);
    

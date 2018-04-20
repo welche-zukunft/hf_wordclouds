@@ -61,7 +61,7 @@ public class eventTimeline {
 
 	public static eventBackground eventBack;
 	public static eventTimelineMenu menu;
-	public static connectionLabel connLabel;
+	
 	public static mainGui userGui;
 	
 	public static PFont menufont;
@@ -119,7 +119,7 @@ public class eventTimeline {
 		
 		this.eventBack = new eventBackground(this);
 		this.menu = new eventTimelineMenu(this);
-		this.connLabel = new connectionLabel(this);
+		
 		this.userGui = new mainGui(this);
 		
 		 
@@ -132,8 +132,8 @@ public class eventTimeline {
 		this.contentPlane.textSize(10);
 		this.statusPlane = parent.createGraphics(1200, 50, PConstants.P3D);
 	
-		images = new PImage[57];
-		  for(int i = 0; i < 57; i++){
+		images = new PImage[51];
+		  for(int i = 0; i < 51; i++){
 		   images[i] = parent.requestImage("./resources/img/" + (i+1) + ".jpg"); 
 		  }
 		  

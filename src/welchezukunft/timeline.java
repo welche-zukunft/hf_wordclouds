@@ -101,7 +101,18 @@ public class timeline extends PApplet{
 	static int white;
 	
 	static int autoZoomTimer = 0;
+	
+	// top 3 anin
+	static int top3 = 0;
+	static float posXtop3 = 0.f;
     
+	//legend anim
+	static int legendposition = 0;
+	static float legendx = 0.f;
+	
+	public static connectionLabel connLabel;
+	static boolean connectionlabel = false;
+	
 	public void settings(){
 		calibrationWin = new calibrationGui(this);
 		accessSQL = new requestSQL(this);
@@ -125,8 +136,9 @@ public class timeline extends PApplet{
 		mainOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
 		wordcloudOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
 		caliOutput = createGraphics(this.sizeTableX, this.sizeTableY, P3D);
-		wordcloudstatus = createGraphics(1920,360,P3D);
+		wordcloudstatus = createGraphics(1920,720,P3D);
 
+		this.connLabel = new connectionLabel(this);
 		
 		black = color(0);
 		white = color(255);
@@ -174,6 +186,11 @@ public class timeline extends PApplet{
 	
     public void draw(){
 
+    	if(connectionlabel == false) {
+    		this.connLabel.draw();
+    	}
+    	
+    	
 	    clear();
 	    background(0);
 
@@ -371,24 +388,28 @@ public class timeline extends PApplet{
 					//draw statusbar
 					wordcloudstatus.beginDraw();
 					wordcloudstatus.clear();
-					//gradient
-					wordcloudstatus.pushMatrix();
-					wordcloudstatus.translate(50,15);
-					int idC = clouds.get(currentCloudid).id -1;
-					gradientShader.set("color1", colorGradients.get(idC).getR1()/255.f,colorGradients.get(idC).getG1()/255.f,colorGradients.get(idC).getB1()/255.f);
-					gradientShader.set("color2", colorGradients.get(idC).getR2()/255.f,colorGradients.get(idC).getG2()/255.f,colorGradients.get(idC).getB2()/255.f);
-					wordcloudstatus.shader(gradientShader);
-					wordcloudstatus.shape(statusGradient);
-					wordcloudstatus.resetShader();
-					wordcloudstatus.popMatrix();
-					//scale
+					//gradient BG
 					if(showall == false) {
 						wordcloudstatus.pushMatrix();
-						wordcloudstatus.translate(50,0);
+						wordcloudstatus.fill(255,210);
+						wordcloudstatus.rect(0,0,1920,80);
+						wordcloudstatus.popMatrix();
+						//gradient
+						wordcloudstatus.pushMatrix();
+						wordcloudstatus.translate(50,25);
+						int idC = clouds.get(currentCloudid).id -1;
+						gradientShader.set("color1", colorGradients.get(idC).getR1()/255.f,colorGradients.get(idC).getG1()/255.f,colorGradients.get(idC).getB1()/255.f);
+						gradientShader.set("color2", colorGradients.get(idC).getR2()/255.f,colorGradients.get(idC).getG2()/255.f,colorGradients.get(idC).getB2()/255.f);
+						wordcloudstatus.shader(gradientShader);
+						wordcloudstatus.shape(statusGradient);
+						wordcloudstatus.resetShader();
+						wordcloudstatus.popMatrix();
+						//scale
+						wordcloudstatus.pushMatrix();
+						wordcloudstatus.translate(50,10);
 						wordcloudstatus.textSize(12);
-						wordcloudstatus.fill(255);
-						for(int i = 0; i < 6; i ++) {
-							
+						wordcloudstatus.fill(0);
+						for(int i = 0; i < 6; i ++) {		
 							wordcloudstatus.text(i*2 + ":00", (1820/5) * i, 0);
 							wordcloudstatus.stroke(255);
 							wordcloudstatus.strokeWeight(2);
@@ -397,27 +418,41 @@ public class timeline extends PApplet{
 						wordcloudstatus.noStroke();
 						wordcloudstatus.popMatrix();
 					}
-					//display WS-BAdge Background
-					wordcloudstatus.textSize(40);
-					float textwi = wordcloudstatus.textWidth(clouds.get(currentCloudid).name);
 					
+					//WS-TITLE
+					//display WS-Badge Background
+					wordcloudstatus.pushMatrix();
+					int shifty = (showall == true) ? 0 : 80; 
+					wordcloudstatus.translate(0, shifty);
+					wordcloudstatus.textSize(30);
+					float textwi = wordcloudstatus.textWidth(clouds.get(currentCloudid).name);
 					boolean twolines = false;
 					if (textwi > 800) {
 						textwi /= 2.;
 						twolines = true;
 					}
-					wordcloudstatus.fill(workshopColorsBG.get(idC));
+						//wordcloudstatus.fill(workshopColorsBG.get(idC));
+					wordcloudstatus.fill(255,210);
 					wordcloudstatus.noStroke();
-					wordcloudstatus.rect(0, 160, textwi + 120, 130);
-
+					int bghi = (twolines == true) ? 100 : 50;
+					wordcloudstatus.rect(0, 0, textwi + 170, bghi);
 					//display WS title
-					wordcloudstatus.fill(workshopColors.get(idC));
+						//wordcloudstatus.fill(workshopColors.get(idC));
+					wordcloudstatus.fill(0);
 					wordcloudstatus.textFont(menufont);
-					wordcloudstatus.textSize(40);
+					wordcloudstatus.textSize(30);
 					wordcloudstatus.textAlign(LEFT,TOP);
-					wordcloudstatus.text(clouds.get(currentCloudid).name, 80, 170,textwi+100,120);
+					
+					wordcloudstatus.text(clouds.get(currentCloudid).name, 80, 10,textwi+150,120);
+					wordcloudstatus.popMatrix();
 					
 					//draw status of current keyword 
+					
+					//draw top3 precalculation
+					boolean showtop = false;
+					posXtop3 = lerp(posXtop3,this.top3,0.1f);
+					showtop = (posXtop3 > 0.01) ? true : false;
+						
 					if(showall == false) {
 						//show current postion with TRIANGLE
 						float newposTRI = 1;
@@ -429,6 +464,7 @@ public class timeline extends PApplet{
 							float trianglePosition = 50 + (posTRI * (wordcloudstatus.width-100));
 							if(clouds.get(currentCloudid).words.get(wordFocus).overtime == true) {
 								//display overttime badge
+								wordcloudstatus.translate(0, 10);
 								wordcloudstatus.noStroke();
 								wordcloudstatus.fill(255,0,0);
 								wordcloudstatus.rect(1870, 15, 50, 35);
@@ -444,6 +480,7 @@ public class timeline extends PApplet{
 						wordcloudstatus.shape(triangle);
 						wordcloudstatus.popMatrix();
 						}
+						/*
 						//display current keyword
 						wordcloudstatus.textSize(25);
 						wordcloudstatus.fill(255);
@@ -459,10 +496,10 @@ public class timeline extends PApplet{
 							wordcloudstatus.text(clouds.get(currentCloudid).words.get(wordFocus).word, 50, 80);
 							wordcloudstatus.text(timeText, 50, 120);
 						}
-					}	
-					
-					//draw top3
-					else if (showall == true) {
+						*/
+					}
+
+					else if (showall == true && showtop == true) {
 						//sort knots
 						synchronized(clouds.get(currentCloudid).knots) {
 							List<knotObject> sortedKnots = clouds.get(currentCloudid).knots.stream()
@@ -472,48 +509,53 @@ public class timeline extends PApplet{
 							int top = 3;
 							int maxiChilds = sortedKnots.get(sortedKnots.size()-1).getCount();
 							top = (sortedKnots.size() > top) ? top : sortedKnots.size();
-							//start draw top3-stat
 							
+							//area = from top 100 to bottom 100 height -- abs height = 520 width = 300
+							//start draw top3-stat
 							wordcloudstatus.pushMatrix();
-							wordcloudstatus.translate(850,260);
-							wordcloudstatus.rotate(radians(90)*-1.f);
-							wordcloudstatus.fill(255);
+							wordcloudstatus.translate(-300.f + posXtop3 * 300.f, 150);
+							wordcloudstatus.fill(255,210);
+							wordcloudstatus.stroke(0);
+							wordcloudstatus.rect(0, 0, 300, 520);					
+							//label
+							wordcloudstatus.translate(20,0);
+							wordcloudstatus.fill(0);
 							wordcloudstatus.textSize(40);
 							wordcloudstatus.text("TOP 3", 0, 0);
-							wordcloudstatus.popMatrix();
-							
-							wordcloudstatus.pushMatrix();
-							wordcloudstatus.translate(1020,70);
+
+							//top3 circles + text :: height 3*150 = 450
+							wordcloudstatus.translate(20,60);
 							for(int i = 0; i < top; i++) {
 								int pos = sortedKnots.size() - 1 - i;
 								if(sortedKnots.get(pos).childs.size() > 1) {
 									int count = sortedKnots.get(pos).getCount();
-									//parent.colors.get(this.id
 									int col = sortedKnots.get(pos).parent.colors.get(sortedKnots.get(pos).id);
 									String word = sortedKnots.get(pos).word;
 									wordcloudstatus.fill(col);
 									wordcloudstatus.noStroke();
-									float sizeCir = 150 * ((float)count / (float)maxiChilds);
-									wordcloudstatus.ellipse(150,135,sizeCir,sizeCir);
+									float sizeCir = 75 * ((float)count / (float)maxiChilds);
+									wordcloudstatus.ellipse(75,95,sizeCir,sizeCir);
 									wordcloudstatus.textAlign(LEFT,TOP);
-									wordcloudstatus.fill(255);
+									wordcloudstatus.fill(0);
 									wordcloudstatus.textSize(25);
-									wordcloudstatus.text(word,0,20,300,105);
+									wordcloudstatus.text(word,0,20,260,60);
 									float tw = wordcloudstatus.textWidth(word);
-									
-									wordcloudstatus.strokeWeight(3);
-									wordcloudstatus.stroke(70);
-									wordcloudstatus.line(tw*0.666f, 20 + 35, 150, 135);
-									wordcloudstatus.ellipse(150,135,5,5);
-									wordcloudstatus.text(count + " x",230,190);
-									wordcloudstatus.translate(300, 0);
+									wordcloudstatus.fill(255);
+									wordcloudstatus.strokeWeight(2);
+									wordcloudstatus.stroke(255);
+									wordcloudstatus.line(tw*0.666f, 20 + 35, 75, 95);
+									wordcloudstatus.ellipse(75,95,4,4);
+									wordcloudstatus.fill(0);
+									wordcloudstatus.text(count + " x",180,115);
+									wordcloudstatus.translate(0, 150);
 								}
 							}
 							wordcloudstatus.popMatrix();
 						}
 					}
+					
 					wordcloudstatus.endDraw();
-					image(wordcloudstatus,1920,720,wordcloudstatus.width,wordcloudstatus.height);					
+					//image(wordcloudstatus,1920,720,wordcloudstatus.width,wordcloudstatus.height);					
 			     	}
 		    	}
     		
@@ -522,12 +564,11 @@ public class timeline extends PApplet{
     			}
     		else if (modus == mode.CRISISSUM) {
     			result.drawPhysics();
-    			image(result.legend,1920,720,result.legend.width,result.legend.height);
     		}
     		
     	}
 	   
-    	
+    	// draw on table
     	if(useshader == true) {
 	        corner.set("resolutionIn", (float)3840,(float)1080);     
 	        corner.set("lu1",(float)calibrationWin.vals[6]/1000.f,(float)calibrationWin.vals[7]/1000.f);
@@ -568,11 +609,12 @@ public class timeline extends PApplet{
     		resetShader();
     	}
     	
+    	
     	// post draw events
     	if (modus == mode.CRISIS && init == true && calibration == false) {
     		//this.events(this.g);
     		image(eventLine.mainPlane,1920,720,1280,360);
-    		image(eventLine.connLabel.connector,1920,0);
+    		//image(eventLine.connLabel.connector,1920,0);
     		eventLine.postdraw();
     	}
     	
@@ -603,12 +645,28 @@ public class timeline extends PApplet{
 		      popMatrix();
 		    }
 
+
+	    
+    	if (modus == mode.KEYWORDS) {
+    		image(wordcloudstatus,1920,0,wordcloudstatus.width,wordcloudstatus.height);	
+    	}
+	    
+    	if (modus == mode.CRISISSUM) {
+			boolean showlegend = false;
+			legendx = lerp(legendx,this.legendposition,0.1f);
+			showlegend = (legendx > 0.01) ? true : false;
+			image(result.legend,1620.f + (legendx * 300.f),0,result.legend.width,result.legend.height);
+		}
+	    
     	if (modus == mode.KEYWORDS) {
 	    	if(frameCount % 60 == 0) {
 	    		this.accessSQL.updateWords();
 	    	}
     	}
     	
+	    
+	    image(this.connLabel.connector,1920,680);  	
+	    
        	eventLine.userGui.guiframe.setTitle("fps: "+ frameRate);
     	
     }
@@ -814,8 +872,8 @@ public class timeline extends PApplet{
     	statusGradient.noStroke();
     	statusGradient.vertex(0,0,0,0);
     	statusGradient.vertex(1820,0,1,0);
-    	statusGradient.vertex(1820,45,1,1);
-    	statusGradient.vertex(0,45,0,1);
+    	statusGradient.vertex(1820,35,1,1);
+    	statusGradient.vertex(0,35,0,1);
     	statusGradient.endShape();
     }
     
