@@ -508,6 +508,10 @@ void createMainGui(){
      {
        public void actionPerformed(ActionEvent e)
        {
+    	   //remove top 3 if visible
+    	   timeline.top3 = 0;
+    	   timeline.posXtop3 = 0.f;
+    	   
     	   timeline.modus = mode.KEYWORDS;
     	   guiframe.getContentPane().remove(switchModePanel);
     	   topPanel2.add(switchModePanel);
@@ -523,6 +527,11 @@ void createMainGui(){
      {
        public void actionPerformed(ActionEvent e)
        {
+    	   
+    	   //remove legend if visible
+    	   timeline.legendposition = 0;
+    	   timeline.legendx = 0.f;
+    	   
     	   //setUp physics
     	   timeline.result.addMover();
     	   timeline.result.a.G = 100;
